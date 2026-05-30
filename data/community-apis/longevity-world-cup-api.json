@@ -10,6 +10,5 @@
   "free": true,
   "addedAt": "2026-05-30",
   "openapiUrl": "",
-  "protocol": "REST",
   "notes": "The API exposes public, machine-readable longevity competition data that is useful for healthspan research, quantified-self tooling, and AI agents looking for open biological-age ranking data."
 }

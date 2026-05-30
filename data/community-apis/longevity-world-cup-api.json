@@ -1,7 +1,7 @@
 {
   "name": "Longevity World Cup API",
   "description": "Open no-auth JSON API for public longevity sport rankings, athlete profiles, biological-age results, and league metadata.",
-  "docsUrl": "https://longevityworldcup.com/llms.txt",
+  "docsUrl": "https://longevityworldcup.com/swagger",
   "websiteUrl": "https://longevityworldcup.com/",
   "categories": ["Health", "Open Data", "Sports & Fitness"],
   "auth": "No Auth",
@@ -9,6 +9,6 @@
   "https": true,
   "free": true,
   "addedAt": "2026-05-30",
-  "openapiUrl": "",
+  "openapiUrl": "https://longevityworldcup.com/swagger/v1/swagger.json",
   "notes": "The API exposes public, machine-readable longevity competition data that is useful for healthspan research, quantified-self tooling, and AI agents looking for open biological-age ranking data."
 }

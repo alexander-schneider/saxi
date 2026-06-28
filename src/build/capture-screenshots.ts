@@ -155,7 +155,10 @@ async function selectTargets(apis: ApiEntry[], options: Options): Promise<ApiEnt
 }
 
 async function launchBrowser(): Promise<Browser> {
+  const channel = process.env.PLAYWRIGHT_CHROMIUM_CHANNEL?.trim() || undefined;
+
   return chromium.launch({
+    ...(channel ? { channel } : {}),
     headless: true,
     args: ["--disable-dev-shm-usage"]
   });

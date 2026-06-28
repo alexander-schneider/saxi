@@ -62,12 +62,19 @@ jobs:
           restore-keys: |
             screenshots-${{ runner.os }}-
 
-      - name: Install Playwright Chromium
+      - name: Verify system Chrome for screenshots
+        id: system_chrome
         if: env.SHOULD_REFRESH_SCREENSHOTS == 'true'
-        run: npx playwright install --with-deps chromium
+        timeout-minutes: 2
+        continue-on-error: true
+        run: google-chrome --version
 
       - name: Refresh screenshots
-        if: env.SHOULD_REFRESH_SCREENSHOTS == 'true'
+        if: env.SHOULD_REFRESH_SCREENSHOTS == 'true' && steps.system_chrome.outcome == 'success'
+        timeout-minutes: 35
+        continue-on-error: true
+        env:
+          PLAYWRIGHT_CHROMIUM_CHANNEL: chrome
         run: |
           args=(--concurrency=5 --limit=60 --stale-days=90)
           if [ -n "$SCREENSHOT_SLUGS" ]; then
@@ -77,6 +84,7 @@ jobs:
 
       - name: Report screenshot coverage
         if: env.SHOULD_REFRESH_SCREENSHOTS == 'true'
+        continue-on-error: true
         run: npm run screenshots:report
 
       - name: Validate types and Wrangler bindings

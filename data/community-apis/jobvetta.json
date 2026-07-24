@@ -1,0 +1,14 @@
+{
+  "name": "Jobvetta",
+  "description": "Provides structured job listings across India sourced from official employer career pages.",
+  "docsUrl": "https://www.jobvetta.com/api",
+  "websiteUrl": "https://www.jobvetta.com",
+  "categories": ["Jobs"],
+  "auth": "API Key",
+  "cors": "Yes",
+  "https": true,
+  "free": true,
+  "addedAt": "2026-07-24",
+  "openapiUrl": "",
+  "notes": "Jobvetta gives external developers access to India-focused job listings from official employer sources and offers a free early-access plan."
+}

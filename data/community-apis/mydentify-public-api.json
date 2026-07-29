@@ -1,0 +1,15 @@
+{
+  "name": "Mydentify Public API",
+  "description": "Provides structured JSON for product-directory research, buyer-intent pages, software comparisons, and founder submission workflows.",
+  "docsUrl": "https://mydentify.com/openapi.json",
+  "websiteUrl": "https://mydentify.com/",
+  "categories": ["Development", "Search"],
+  "auth": "No Auth",
+  "cors": "Yes",
+  "https": true,
+  "free": true,
+  "addedAt": "2026-07-27",
+  "openapiUrl": "https://mydentify.com/openapi.json",
+  "protocol": "REST",
+  "notes": "Mydentify gives external developers and agents free structured access to curated product directories, discovery categories, and buyer-intent research without requiring an account or API key."
+}

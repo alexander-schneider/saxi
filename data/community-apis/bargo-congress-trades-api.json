@@ -1,0 +1,17 @@
+{
+  "name": "Bargo Congress Trades API",
+  "description": "Query normalized U.S. House and Senate STOCK Act transaction disclosures by ticker, member, chamber, transaction type, or date.",
+  "docsUrl": "https://www.bargo.ai/free-apis/congress",
+  "websiteUrl": "https://www.bargo.ai",
+  "categories": [
+    "Finance",
+    "Government"
+  ],
+  "auth": "API Key",
+  "cors": "Yes",
+  "https": true,
+  "free": true,
+  "addedAt": "2026-08-01",
+  "openapiUrl": "https://www.bargo.ai/free-apis/congress/openapi.json",
+  "notes": "Public documentation and an OpenAPI definition are available. The API provides a free access tier for normalized congressional disclosure research."
+}

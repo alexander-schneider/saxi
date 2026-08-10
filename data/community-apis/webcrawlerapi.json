@@ -1,0 +1,14 @@
+{
+  "name": "WebCrawlerAPI",
+  "description": "API to scrape and crawl websites and extract clean, LLM-ready scrape markdown for AI agents, RAG pipelines, and knowledge bases.",
+  "docsUrl": "https://www.webcrawlerapi.com/docs",
+  "websiteUrl": "https://www.webcrawlerapi.com",
+  "categories": ["Development"],
+  "auth": "API Key",
+  "cors": "Unknown",
+  "https": true,
+  "free": false,
+  "addedAt": "2026-08-10",
+  "openapiUrl": "",
+  "notes": "Turns any site into clean scrape markdown for AI agents in one API call, handling proxies, JS rendering, and anti-bot automatically. Pay-as-you-go pricing with no subscription required, or choose a monthly subscription for a discount."
+}

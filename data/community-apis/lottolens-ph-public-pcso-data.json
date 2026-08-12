@@ -1,0 +1,14 @@
+{
+  "name": "LottoLens PH Public PCSO Data",
+  "description": "Free read-only API for an unofficial Philippine PCSO results snapshot and normal draw schedules, with row-level provenance and explicit non-prediction limits.",
+  "docsUrl": "https://lottolensph.com/research/pcso-results-data-coverage",
+  "websiteUrl": "https://lottolensph.com/",
+  "categories": ["Open Data", "Government"],
+  "auth": "No Auth",
+  "cors": "Yes",
+  "https": true,
+  "free": true,
+  "addedAt": "2026-08-12",
+  "openapiUrl": "https://remo65588-boop.github.io/lottolens-ph-public-data/api/openapi.yaml",
+  "notes": "The public API exposes a fixed 13,457-row historical-results snapshot and nine normal draw schedules without login or payment. It includes public documentation, OpenAPI 3.1, HTTPS, CORS, row-level source URLs, checksums, coverage limits and clear independent/non-official boundaries. It does not sell tickets, accept wagers or claim prediction. Submitted on behalf of LottoLens PH."
+}

@@ -1,6 +1,6 @@
 {
   "name": "LottoLens PH Public PCSO Data",
-  "description": "Free read-only API for a fixed Philippine PCSO results snapshot and normal draw schedules, with row-level provenance and explicit non-prediction limits.",
+  "description": "Free read-only API for an unofficial Philippine PCSO results snapshot and normal draw schedules, with row-level provenance and explicit non-prediction limits.",
   "docsUrl": "https://lottolensph.com/research/pcso-results-data-coverage",
   "websiteUrl": "https://lottolensph.com/",
   "categories": ["Open Data", "Government"],

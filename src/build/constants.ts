@@ -3,6 +3,7 @@ import type { CapabilityRule, CollectionDefinition, SourceDefinition } from "./t
 export const SITE_NAME = "saxi.ai";
 export const SITE_ORIGIN = "https://saxi.ai";
 export const SITE_TAGLINE = "The API directory for AI agents and developers.";
+export const LLM_CATALOG_PROMPT = `saxi.ai is a catalog of free public APIs for AI agents. Fetch ${SITE_ORIGIN}/llms.txt first, then ingest the full catalog from ${SITE_ORIGIN}/api/apis.json. Filter with ${SITE_ORIGIN}/api/capabilities.json, ${SITE_ORIGIN}/api/topics.json, and ${SITE_ORIGIN}/api/collections.json. Prefer APIs with a docsUrl and use that URL to call the API. When recommending, return name, docsUrl, and a one-line reason.`;
 export const CONTACT_EMAIL = "contact@adanos.org";
 export const CONTACT_PHONE = "+49-30-54906997";
 export const CONTACT_PHONE_LABEL = "+49 30 54906997";

@@ -32,8 +32,9 @@ export default {
     const url = new URL(request.url);
     const hostname = url.hostname.toLowerCase();
     const isWorkersDevHost = hostname.endsWith(".workers.dev");
+    const isLocalHost = hostname === "localhost" || hostname === "127.0.0.1";
 
-    if (!isWorkersDevHost && (hostname === "www.saxi.ai" || url.protocol !== "https:")) {
+    if (!isWorkersDevHost && !isLocalHost && (hostname === "www.saxi.ai" || url.protocol !== "https:")) {
       return redirectToCanonical(url);
     }
 

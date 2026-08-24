@@ -54,7 +54,7 @@ async function buildSite(): Promise<void> {
   await writeOutputFile("topic/index.html", renderTaxonomyIndexPage(
     site,
     "Categories",
-    "All API categories in the directory — from AI & ML to Maps & Mobility.",
+    "Browse APIs by category.",
     "/topic/",
     site.topics.map((topic) => ({
       href: `/topic/${topic.slug}/`,
@@ -66,7 +66,7 @@ async function buildSite(): Promise<void> {
   await writeOutputFile("category/index.html", renderTaxonomyIndexPage(
     site,
     "Sections",
-    "Top-level groupings that organize APIs by domain — developer tools, security, finance, and more.",
+    "Browse free APIs by domain.",
     "/category/",
     site.categories.map((category) => ({
       href: `/category/${category.slug}/`,
@@ -78,7 +78,7 @@ async function buildSite(): Promise<void> {
   await writeOutputFile("capability/index.html", renderTaxonomyIndexPage(
     site,
     "Capabilities",
-    "APIs organized by what they do — LLM inference, OCR, search, code execution, and 18 more.",
+    "Browse APIs by what they do.",
     "/capability/",
     site.capabilities.map((capability) => ({
       href: `/capability/${capability.slug}/`,
@@ -90,7 +90,7 @@ async function buildSite(): Promise<void> {
   await writeOutputFile("collections/index.html", renderTaxonomyIndexPage(
     site,
     "Collections",
-    "Themed groups of APIs for specific workflows — agent toolchains, RAG pipelines, browser automation, and more.",
+    "Browse APIs grouped by workflow.",
     "/collections/",
     site.collections.map((collection) => ({
       href: `/collections/${collection.slug}/`,

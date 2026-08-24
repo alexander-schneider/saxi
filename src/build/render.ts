@@ -13,8 +13,10 @@ import {
   PAGE_SIZE,
   SITE_NAME,
   SITE_ORIGIN,
-  SITE_TAGLINE
+  SITE_TAGLINE,
+  LLM_CATALOG_PROMPT
 } from "./constants.js";
+import { categoryIcon } from "./topic-icons.js";
 import type { ApiEntry, CollectionPage, SiteData, TaxonomyPage } from "./types.js";
 import { compareStrings, escapeHtml, slugify } from "./utils.js";
 
@@ -59,16 +61,26 @@ export function renderDocument(definition: PageDefinition): string {
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script>
+      (function () {
+        try {
+          var stored = localStorage.getItem("saxi-theme");
+          var theme = stored === "light" || stored === "dark"
+            ? stored
+            : "dark";
+          document.documentElement.dataset.theme = theme;
+          document.documentElement.style.colorScheme = theme;
+        } catch (error) {}
+      })();
+    </script>
     <title>${escapeHtml(title)}</title>
     <meta name="description" content="${escapeHtml(definition.description)}" />
-    <meta name="theme-color" content="#08111f" />
+    <meta name="theme-color" content="#08090a" />
     ${definition.noIndex ? '<meta name="robots" content="noindex, follow" />' : '<meta name="robots" content="index, follow" />'}
     <link rel="canonical" href="${canonicalUrl}" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    <link rel="preload" href="/assets/fonts/sora-latin-400-700.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/assets/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="/assets/fonts/ibm-plex-mono-latin-400.woff2" as="font" type="font/woff2" crossorigin />
-    <link rel="preload" href="/assets/fonts/ibm-plex-mono-latin-500.woff2" as="font" type="font/woff2" crossorigin />
-    <link rel="preload" href="/assets/fonts/ibm-plex-mono-latin-600.woff2" as="font" type="font/woff2" crossorigin />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="${SITE_NAME}" />
     <meta property="og:title" content="${escapeHtml(definition.title)}" />
@@ -80,62 +92,88 @@ export function renderDocument(definition: PageDefinition): string {
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="${escapeHtml(definition.title)}" />
     <meta name="twitter:description" content="${escapeHtml(definition.description)}" />
-    <link rel="stylesheet" href="/assets/app.css" />
+    <link rel="stylesheet" href="/assets/app.css?v=llm-copy" />
     ${structuredData ?? ""}
   </head>
   <body>
-    <div class="shell pb-20 pt-6 sm:pt-8">
+    <a class="skip-link" href="#main">Skip to content</a>
+    ${renderHeader()}
+    <div class="shell pb-20 pt-8">
       <div class="${definition.sidebar ? "site-layout" : ""}">
         ${definition.sidebar ? `<aside class="site-sidebar hidden xl:block">${definition.sidebar}</aside>` : ""}
         <div class="site-main">
-          ${renderHeader()}
-          <main class="shell-grid py-6">
+          <main id="main" class="shell-grid py-6">
             ${definition.body}
           </main>
           ${renderFooter()}
         </div>
       </div>
     </div>
-    <script src="/assets/app.js" defer></script>
+    <script src="/assets/app.js?v=llm-copy" defer></script>
   </body>
 </html>`;
 }
 
 function renderHeader(): string {
-  return `<header class="header-bar">
-    <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-      <a href="/" class="inline-flex items-center text-white">
-        <span>
-          <span class="block font-sans text-lg font-black uppercase tracking-[-0.02em] sm:text-xl">saxi.ai</span>
-          <span class="block font-mono text-[11px] font-semibold uppercase tracking-[0.18em] text-ink-300">public APIs for AI agents and developers</span>
-        </span>
-      </a>
-      <form action="/apis/" method="get" class="header-search">
-        <input
-          class="min-w-0 flex-1 bg-transparent text-sm text-white outline-none placeholder:text-ink-500"
-          type="search"
-          name="q"
-          placeholder="Search APIs..."
-        />
-        <button class="header-search-button" type="submit">Go</button>
-      </form>
+  const llmPrompt = escapeHtml(LLM_CATALOG_PROMPT);
+  return `<header class="site-header">
+    <div class="site-header-inner">
+      <a href="/" class="site-logo" aria-label="saxi.ai home">saxi<span class="site-logo-tld">.ai</span></a>
+      <div class="header-tools">
+        <div class="header-llm" data-llm-copy>
+          <label class="header-llm-kicker" for="llm-catalog-prompt">LLM</label>
+          <input
+            id="llm-catalog-prompt"
+            class="header-llm-input"
+            type="text"
+            readonly
+            spellcheck="false"
+            autocomplete="off"
+            value="${llmPrompt}"
+            title="${llmPrompt}"
+          />
+          <button class="header-llm-copy" type="button" data-llm-copy-button aria-live="polite" aria-label="Copy catalog prompt">Copy</button>
+        </div>
+        <div class="header-tools-end">
+        <button
+          type="button"
+          class="theme-toggle"
+          data-theme-toggle
+          aria-pressed="false"
+          aria-label="Switch to light mode"
+        >
+          <span class="theme-toggle-icons" aria-hidden="true">
+            <svg class="theme-toggle-icon theme-toggle-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+              <circle cx="12" cy="12" r="4" />
+              <path d="M12 3v1.5M12 19.5V21M4.22 4.22l1.06 1.06M18.72 18.72l1.06 1.06M3 12h1.5M19.5 12H21M4.22 19.78l1.06-1.06M18.72 5.28l1.06-1.06" />
+            </svg>
+            <svg class="theme-toggle-icon theme-toggle-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 14.5A8.5 8.5 0 1 1 9.5 3 7 7 0 0 0 21 14.5z" />
+            </svg>
+          </span>
+        </button>
+        <form action="/apis/" method="get" class="header-search">
+          <label class="sr-only" for="site-search">Search APIs</label>
+          <input
+            id="site-search"
+            class="min-w-0 flex-1 bg-transparent text-base text-ink-950 outline-none placeholder:text-ink-500"
+            type="search"
+            name="q"
+            placeholder="Search APIs"
+          />
+          <button class="header-search-button" type="submit">Search</button>
+        </form>
+        </div>
+      </div>
     </div>
-    <nav class="mobile-nav flex gap-2 overflow-x-auto pt-4 xl:hidden" aria-label="Main navigation">
-      <a href="/apis/" class="nav-pill whitespace-nowrap">All APIs</a>
-      <a href="/capability/" class="nav-pill whitespace-nowrap">Capabilities</a>
-      <a href="/collections/" class="nav-pill whitespace-nowrap">Collections</a>
-      <a href="/category/" class="nav-pill whitespace-nowrap">Sections</a>
-      <a href="/topic/" class="nav-pill whitespace-nowrap">Categories</a>
-      <a href="/add-api/" class="nav-pill whitespace-nowrap">Add API</a>
-    </nav>
   </header>`;
 }
 
 function renderFooter(): string {
-  return `<footer class="mt-14 border-t border-white/10 pt-8 text-sm text-ink-400">
+  return `<footer class="mt-14 border-t border-ink-200 pt-8 text-sm text-ink-600">
     <div class="grid gap-8 lg:grid-cols-[minmax(0,1.2fr)_minmax(260px,0.8fr)]">
       <div class="max-w-2xl space-y-3">
-        <p class="font-mono text-[11px] uppercase tracking-[0.24em] text-ink-500">About</p>
+        <p class="meta-label">About</p>
         <p>
           saxi.ai indexes public APIs from open-source lists and community submissions for AI agents
           and developers. Every entry links to real docs, carries availability metadata, and is tagged by capability.
@@ -143,11 +181,11 @@ function renderFooter(): string {
       </div>
       <div class="grid gap-6 sm:grid-cols-2">
         <div class="space-y-2">
-          <p class="font-mono text-[11px] uppercase tracking-[0.24em] text-ink-500">Contact</p>
+          <p class="meta-label">Contact</p>
           <p><a class="eyebrow-link" href="/contact/">Contact page</a></p>
         </div>
         <div class="space-y-2 lg:text-right">
-          <p class="font-mono text-[11px] uppercase tracking-[0.24em] text-ink-500">Sources</p>
+          <p class="meta-label">Sources</p>
         <p><a class="eyebrow-link" href="https://github.com/public-api-lists/public-api-lists" target="_blank" rel="noopener noreferrer">Public API Lists</a></p>
         <p><a class="eyebrow-link" href="https://github.com/public-apis/public-apis" target="_blank" rel="noopener noreferrer">public-apis/public-apis</a></p>
         <p><a class="eyebrow-link" href="https://github.com/tools-collection/apis-collection" target="_blank" rel="noopener noreferrer">tools-collection/apis-collection</a></p>
@@ -206,7 +244,7 @@ function renderSidebar(site: SiteData, pathname: string): string {
       const href = `/topic/${topic.slug}/`;
       const active = pathname === href;
       return `<a href="${href}" class="sidebar-link" data-active="${active ? "true" : "false"}">
-        <span>${escapeHtml(topic.title)}</span>
+        <span class="sidebar-link-label">${categoryIcon(topic.slug)}<span>${escapeHtml(topic.title)}</span></span>
         <span class="sidebar-count">${topic.count}</span>
       </a>`;
     })
@@ -224,19 +262,20 @@ function renderSidebar(site: SiteData, pathname: string): string {
     <section class="sidebar-panel">
       <div class="flex items-center justify-between gap-3">
         <p class="sidebar-section-label">Categories</p>
-        <a href="/topic/" class="eyebrow-link text-[11px] uppercase tracking-[0.18em]">All</a>
+        <a href="/topic/" class="eyebrow-link">All</a>
       </div>
       <div class="sidebar-list sidebar-list-scroll">${topicLinks}</div>
     </section>
   </div>`;
 }
 
-function renderHero(title: string, eyebrow: string, description: string, actions?: string): string {
+function renderHero(title: string, eyebrow: string, description: string, actions?: string, iconSvg?: string): string {
   return `<section class="hero-panel">
     <div class="space-y-5">
+      ${iconSvg ? `<div class="hero-icon-wrap">${iconSvg}</div>` : ""}
       <p class="meta-label">${eyebrow}</p>
-      <h1 class="max-w-4xl text-2xl font-black uppercase tracking-[-0.04em] text-white sm:text-4xl lg:text-[2.75rem]">${title}</h1>
-      <p class="max-w-3xl text-sm leading-8 text-ink-300 sm:text-base">${description}</p>
+      <h1 class="max-w-4xl text-4xl font-medium tracking-tight text-ink-950 sm:text-5xl lg:text-[4rem] lg:leading-none">${title}</h1>
+      <p class="max-w-3xl text-base leading-8 text-ink-700">${description}</p>
       ${actions ?? ""}
     </div>
   </section>`;
@@ -271,21 +310,21 @@ function renderEditorialSlice(intro: string, editorialSections: string[], apis: 
   return `<section class="grid gap-5 xl:grid-cols-[minmax(0,1.12fr)_minmax(280px,0.88fr)]">
     <article class="hero-note px-6 py-6 sm:px-8 sm:py-8">
       <div class="space-y-4">
-        <p class="text-sm leading-8 text-ink-200 sm:text-base">${escapeHtml(intro)}</p>
-        ${editorialSections.map((paragraph) => `<p class="text-sm leading-8 text-ink-300 sm:text-base">${escapeHtml(paragraph)}</p>`).join("")}
+        <p class="text-base leading-8 text-ink-600">${escapeHtml(intro)}</p>
+        ${editorialSections.map((paragraph) => `<p class="text-base leading-8 text-ink-700">${escapeHtml(paragraph)}</p>`).join("")}
       </div>
     </article>
     <aside class="glass-tile space-y-4">
       <div>
         <p class="meta-label">Snapshot</p>
-        <h2 class="mt-2 text-2xl font-semibold tracking-tight text-white">Why this page matters</h2>
+        <h2 class="mt-2 text-2xl font-semibold tracking-tight text-ink-950">Why this page matters</h2>
       </div>
       <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
         ${stats
           .map(
-            (stat) => `<div class="rounded-[0.8rem] border border-white/10 bg-white/[0.02] px-4 py-3">
+            (stat) => `<div class="rounded-[0.8rem] border border-ink-200 bg-white/[0.02] px-4 py-3">
               <p class="meta-label">${escapeHtml(stat.label)}</p>
-              <p class="mt-2 text-lg font-semibold tracking-tight text-white">${escapeHtml(stat.value)}</p>
+              <p class="mt-2 text-lg font-semibold tracking-tight text-ink-950">${escapeHtml(stat.value)}</p>
             </div>`
           )
           .join("")}
@@ -295,47 +334,17 @@ function renderEditorialSlice(intro: string, editorialSections: string[], apis: 
   </section>`;
 }
 
-function renderIndexEditorial(title: string, description: string): string {
-  const copy =
-    title === "Collections"
-      ? [
-          "Collections are the strongest SEO landing pages in the directory because they group APIs by real-world workflow rather than only by vendor taxonomy. They are designed for people who know the job to be done, but still need a shortlist of credible options.",
-          "Use them when you are comparing solution patterns such as browser automation, OCR, translation, speech, or search for RAG. Each collection is static, crawlable, and intentionally curated to avoid the thin-content problem that faceted pages often create."
-        ]
-      : title === "Capabilities"
-        ? [
-            "Capability pages are useful when the requirement is functional rather than market-specific. They group APIs by what they do, which makes them strong entry points for developers, agents, and search traffic looking for a concrete technical outcome.",
-            "Because these pages cut across many categories, they expose substitutes that would otherwise be buried in broader sections. That makes them ideal for top-of-funnel research and mid-funnel API comparison."
-          ]
-        : title === "Categories"
-          ? [
-              "Category pages are the long-tail discovery layer of the directory. They preserve the vocabulary used by upstream public API collections, which helps map search intent directly to a stable, crawlable landing page.",
-              "This is especially useful for niche subjects where users search by ecosystem label rather than by protocol or vendor. Start here if you know the category name already."
-            ]
-          : [
-              "Section pages group the directory into broad market domains such as developer tools, finance, security, and communication. They are useful when you are orienting yourself within the dataset before narrowing into a capability or category page.",
-              "These pages act as canonical overviews of each domain and then link into the more specific static landing pages beneath them."
-            ];
-
-  return `<section class="hero-note px-6 py-6 sm:px-8 sm:py-8">
-    <div class="space-y-4">
-      <p class="text-sm leading-8 text-ink-200 sm:text-base">${escapeHtml(description)}</p>
-      ${copy.map((paragraph) => `<p class="text-sm leading-8 text-ink-300 sm:text-base">${escapeHtml(paragraph)}</p>`).join("")}
-    </div>
-  </section>`;
-}
-
 function renderSearchHero(site: SiteData): string {
   return `<form action="/apis/" method="get" class="hero-panel">
-    <div class="grid gap-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(250px,0.9fr)] lg:items-end">
-      <div class="space-y-5">
-        <p class="meta-label">${site.apis.length} APIs. ${site.topics.length} categories. Open data.</p>
-        <h1 class="max-w-4xl text-2xl font-black uppercase tracking-[-0.04em] text-white sm:text-4xl lg:text-[2.75rem]">${SITE_TAGLINE}</h1>
-        <p class="max-w-3xl text-sm leading-8 text-ink-300 sm:text-base">
-          Discover APIs across AI, search, browser automation, developer tools, messaging, maps, payments, and infrastructure.
+    <div class="hero-grid">
+      <p class="hero-lede">${site.apis.length} free APIs. ${site.topics.length} categories. Open data.</p>
+      <div class="hero-copy">
+        <h1 class="max-w-4xl text-4xl font-medium tracking-tight text-ink-950 sm:text-5xl lg:text-[4rem] lg:leading-none">${SITE_TAGLINE}</h1>
+        <p class="max-w-3xl text-base leading-8 text-ink-700">
+          Discover free APIs across AI, search, browser automation, developer tools, messaging, maps, payments, and infrastructure.
         </p>
       </div>
-      <div class="grid grid-cols-2 gap-3">
+      <div class="hero-stats">
         <div class="hero-stat">
           <span class="meta-label">APIs</span>
           <strong>${site.apis.length}</strong>
@@ -366,8 +375,8 @@ function renderSponsoredBanner(): string {
           <span class="badge">Adanos Software</span>
         </div>
         <div class="space-y-3">
-          <h2 class="text-3xl font-black uppercase tracking-[-0.04em] text-white sm:text-[2.35rem]">Market sentiment API for stocks and crypto.</h2>
-          <p class="max-w-3xl text-sm leading-8 text-ink-300 sm:text-base">
+          <h2 class="text-3xl font-medium tracking-tight text-ink-950 sm:text-[2.35rem]">Market sentiment API for stocks and crypto.</h2>
+          <p class="max-w-3xl text-base leading-8 text-ink-700">
             Real-time sentiment and attention data from Reddit, X, financial news, Polymarket and crypto communities,
             unified into a developer-first API for trading tools, quant workflows and AI agents.
           </p>
@@ -411,17 +420,27 @@ function renderSectionTitle(title: string, description: string, href?: string): 
   </div>`;
 }
 
+function taxonomySlugFromHref(href: string): string | undefined {
+  const match = /^\/(?:topic|category|capability|collections)\/([^/]+)\/?$/.exec(href);
+  return match?.[1];
+}
+
 function renderTaxonomyTiles(items: Array<{ href: string; title: string; description: string; count: number }>): string {
   return `<div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">${items
-    .map(
-      (item) => `<a href="${item.href}" class="glass-tile group">
-        <div class="flex items-center justify-between gap-3">
-          <h3 class="text-lg font-semibold text-white">${escapeHtml(item.title)}</h3>
-          <span class="badge">${item.count} APIs</span>
+    .map((item) => {
+      const slug = taxonomySlugFromHref(item.href);
+      const icon = slug ? categoryIcon(slug) : "";
+      return `<a href="${item.href}" class="glass-tile group">
+        <div class="flex items-start justify-between gap-3">
+          <div class="flex min-w-0 items-center gap-3">
+            ${icon ? `<span class="category-icon-wrap">${icon}</span>` : ""}
+            <h3 class="text-lg font-semibold text-ink-950">${escapeHtml(item.title)}</h3>
+          </div>
+          <span class="badge shrink-0">${item.count} APIs</span>
         </div>
-        <p class="mt-3 text-sm leading-7 text-ink-300">${escapeHtml(item.description)}</p>
-      </a>`
-    )
+        <p class="mt-3 text-sm leading-7 text-ink-700">${escapeHtml(item.description)}</p>
+      </a>`;
+    })
     .join("")}</div>`;
 }
 
@@ -473,10 +492,10 @@ function renderApiCard(api: ApiEntry): string {
         </div>
         <div class="space-y-2">
           <div class="flex items-center justify-between gap-3">
-            <h3 class="text-xl font-semibold tracking-tight text-white">${escapeHtml(api.name)}</h3>
-            <span class="font-mono text-xs uppercase tracking-[0.18em] text-ink-500">${escapeHtml(api.domain)}</span>
+            <h3 class="text-xl font-semibold tracking-tight text-ink-950">${escapeHtml(api.name)}</h3>
+            <span class="font-mono text-sm text-ink-500">${escapeHtml(api.domain)}</span>
           </div>
-          <p class="text-sm leading-7 text-ink-300">${escapeHtml(api.description)}</p>
+          <p class="text-sm leading-7 text-ink-700">${escapeHtml(api.description)}</p>
         </div>
         <div class="mt-auto flex flex-wrap gap-2">${badges}</div>
       </div>
@@ -548,7 +567,8 @@ function renderAllApisFilters(site: SiteData): string {
 
   return `<form class="filter-panel" data-filter-form>
     <div class="space-y-2">
-      <input class="filter-input" type="search" name="q" placeholder="Search APIs, docs, or capabilities..." data-search-input />
+      <label class="sr-only" for="api-search">Search APIs</label>
+      <input id="api-search" class="filter-input" type="search" name="q" placeholder="Search APIs, docs, or capabilities" data-search-input />
     </div>
     <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
       <select class="filter-input" name="category" aria-label="Category">
@@ -713,7 +733,7 @@ export function renderApisLandingPage(site: SiteData, pager: PagerState): string
   const archiveSummary = `<div class="flex flex-wrap items-center justify-between gap-4">
     <div class="space-y-1">
       <p class="meta-label">Pages</p>
-      <p class="text-sm text-ink-300">
+      <p class="text-sm text-ink-700">
         Browse all APIs page by page, or use the filters above to narrow down.
       </p>
     </div>
@@ -747,23 +767,17 @@ export function renderApisLandingPage(site: SiteData, pager: PagerState): string
         "All APIs",
         "Filter by category, capability, auth type, or just search. Every API links directly to its documentation."
       ),
-      `<section class="hero-note px-6 py-6 sm:px-8 sm:py-8">
-        <div class="space-y-4">
-          <p class="text-sm leading-8 text-ink-200 sm:text-base">This page exists for interactive browsing and query-based narrowing, not as a canonical SEO landing page.</p>
-          <p class="text-sm leading-8 text-ink-300 sm:text-base">If you want indexable, shareable entry points, use the static section, category, capability, and collection pages instead. They carry the editorial context and stable URLs that search engines should prefer.</p>
-        </div>
-      </section>`,
       `<section class="space-y-6">
         ${renderAllApisFilters(site)}
         <div class="space-y-5">
           <div class="flex flex-wrap items-center justify-between gap-4">
           <div>
               <p class="meta-label">Results</p>
-              <h2 class="text-2xl font-bold tracking-tight text-white">APIs for AI agents and developers</h2>
+              <h2 class="text-2xl font-bold tracking-tight text-ink-950">Free APIs for AI agents and developers</h2>
             </div>
             <p class="badge" data-results-count>${site.apis.length} APIs</p>
           </div>
-          <p class="text-xs text-ink-500">Filters update the URL for browsing convenience, but the canonical landing pages on saxi.ai are the static section, category, capability, and collection routes.</p>
+          <p class="text-sm text-ink-500">Filters update the URL for browsing convenience, but the canonical landing pages on saxi.ai are the static section, category, capability, and collection routes.</p>
           <div data-search-index="/search-index.json">
             ${renderApiGrid(site.apis.slice(0, PAGE_SIZE))}
           </div>
@@ -836,7 +850,6 @@ export function renderTaxonomyIndexPage(
     sidebar: renderSidebar(site, path),
     body: [
       renderHero(title, "Index", description),
-      renderIndexEditorial(title, description),
       `<section class="space-y-5">${renderTaxonomyTiles(items)}</section>`
     ].join("")
   });
@@ -890,13 +903,13 @@ function renderTaxonomyBody(
 
   return [
     renderBreadcrumb(breadcrumb),
-    renderHero(item.title, eyebrow, item.description),
+    renderHero(item.title, eyebrow, item.description, undefined, categoryIcon(item.slug)),
     renderEditorialSlice(item.intro, item.editorialSections, item.apis),
     `<section class="space-y-5">
       <div class="flex flex-wrap items-center justify-between gap-4">
         <div class="space-y-1">
           <p class="meta-label">Directory slice</p>
-          <h2 class="text-2xl font-bold tracking-tight text-white">${item.apis.length} APIs</h2>
+          <h2 class="text-2xl font-bold tracking-tight text-ink-950">${item.apis.length} APIs</h2>
         </div>
         <a href="${allApisLink}" class="button-secondary">Open in all APIs search</a>
       </div>
@@ -1010,12 +1023,12 @@ export function renderAddApiPage(site: SiteData): string {
           <div class="space-y-6">
             <div>
               <p class="meta-label">GitHub flow</p>
-              <h2 class="mt-2 text-2xl font-black uppercase tracking-[-0.03em] text-white">Why this starts in the file editor</h2>
+              <h2 class="mt-2 text-2xl font-medium tracking-tight text-ink-950">Why this starts in the file editor</h2>
             </div>
-            <p class="text-sm leading-7 text-ink-300">
+            <p class="text-sm leading-7 text-ink-700">
               A pull request compares two branches. For a new API submission there is no contributor branch yet,
               so GitHub cannot directly show a useful create-PR page. The generated editor link creates the required
-              JSON file first; after the contributor clicks <span class="text-white">Propose changes</span>, GitHub opens
+              JSON file first; after the contributor clicks <span class="text-ink-950">Propose changes</span>, GitHub opens
               the pull request screen with the validation checks attached.
             </p>
             <div class="flex flex-wrap gap-3">
@@ -1028,11 +1041,11 @@ export function renderAddApiPage(site: SiteData): string {
           <div class="space-y-5">
             <div>
               <p class="meta-label">Checklist</p>
-              <h2 class="mt-2 text-2xl font-black uppercase tracking-[-0.03em] text-white">Before opening the PR</h2>
+              <h2 class="mt-2 text-2xl font-medium tracking-tight text-ink-950">Before opening the PR</h2>
             </div>
-            <ul class="space-y-3 text-sm leading-7 text-ink-300">
-              <li>Rename the file to lowercase kebab-case, for example <code class="text-white">my-example-api.json</code>.</li>
-              <li>Replace every placeholder value, especially <code class="text-white">Example API</code> and <code class="text-white">example.com</code>.</li>
+            <ul class="space-y-3 text-sm leading-7 text-ink-700">
+              <li>Rename the file to lowercase kebab-case, for example <code class="text-ink-950">my-example-api.json</code>.</li>
+              <li>Replace every placeholder value, especially <code class="text-ink-950">Example API</code> and <code class="text-ink-950">example.com</code>.</li>
               <li>Use 1-3 categories copied from the allowed category list.</li>
               <li>Submit only APIs with public docs and accurate availability metadata.</li>
             </ul>
@@ -1082,14 +1095,14 @@ export function renderContactPage(site: SiteData): string {
           <div class="space-y-5">
             <div>
               <p class="meta-label">Primary contact</p>
-              <a href="mailto:${CONTACT_EMAIL}" class="mt-2 inline-block text-2xl font-semibold tracking-tight text-white">${CONTACT_EMAIL}</a>
+              <a href="mailto:${CONTACT_EMAIL}" class="mt-2 inline-block text-2xl font-semibold tracking-tight text-ink-950">${CONTACT_EMAIL}</a>
             </div>
             <div>
               <p class="meta-label">Phone</p>
-              <a href="tel:${CONTACT_PHONE}" class="mt-2 inline-block text-xl font-semibold tracking-tight text-white">${CONTACT_PHONE_LABEL}</a>
-              <p class="mt-2 text-sm leading-7 text-ink-300">Business line only. No product support by phone.</p>
+              <a href="tel:${CONTACT_PHONE}" class="mt-2 inline-block text-xl font-semibold tracking-tight text-ink-950">${CONTACT_PHONE_LABEL}</a>
+              <p class="mt-2 text-sm leading-7 text-ink-700">Business line only. No product support by phone.</p>
             </div>
-            <p class="text-sm leading-7 text-ink-300">
+            <p class="text-sm leading-7 text-ink-700">
               Please include enough context if you are reporting a broken source, outdated docs URL, category issue, or partnership request.
             </p>
           </div>
@@ -1098,16 +1111,16 @@ export function renderContactPage(site: SiteData): string {
           <div class="space-y-5">
             <div>
               <p class="meta-label">Company</p>
-              <h2 class="mt-2 text-2xl font-semibold tracking-tight text-white">${COMPANY_NAME}</h2>
+              <h2 class="mt-2 text-2xl font-semibold tracking-tight text-ink-950">${COMPANY_NAME}</h2>
             </div>
-            <div class="space-y-1 text-sm leading-7 text-ink-300">
+            <div class="space-y-1 text-sm leading-7 text-ink-700">
               <p>${COMPANY_STREET}</p>
               <p>${COMPANY_POSTAL}</p>
               <p>${COMPANY_COUNTRY}</p>
             </div>
-            <div class="space-y-1 text-sm leading-7 text-ink-300">
-              <p><span class="text-white">Managing Director:</span> ${COMPANY_MANAGING_DIRECTOR}</p>
-              <p><span class="text-white">Responsible for content:</span> ${COMPANY_MANAGING_DIRECTOR}</p>
+            <div class="space-y-1 text-sm leading-7 text-ink-700">
+              <p><span class="text-ink-950">Managing Director:</span> ${COMPANY_MANAGING_DIRECTOR}</p>
+              <p><span class="text-ink-950">Responsible for content:</span> ${COMPANY_MANAGING_DIRECTOR}</p>
             </div>
           </div>
         </article>
@@ -1117,12 +1130,12 @@ export function renderContactPage(site: SiteData): string {
           <div class="space-y-5">
             <div>
               <p class="meta-label">Registration</p>
-              <h2 class="mt-2 text-2xl font-semibold tracking-tight text-white">Legal company details</h2>
+              <h2 class="mt-2 text-2xl font-semibold tracking-tight text-ink-950">Legal company details</h2>
             </div>
-            <div class="space-y-1 text-sm leading-7 text-ink-300">
-              <p><span class="text-white">Registered at:</span> ${COMPANY_REGISTER_COURT}</p>
-              <p><span class="text-white">Registration number:</span> ${COMPANY_REGISTER_NUMBER}</p>
-              <p><span class="text-white">VAT ID:</span> ${COMPANY_VAT_ID}</p>
+            <div class="space-y-1 text-sm leading-7 text-ink-700">
+              <p><span class="text-ink-950">Registered at:</span> ${COMPANY_REGISTER_COURT}</p>
+              <p><span class="text-ink-950">Registration number:</span> ${COMPANY_REGISTER_NUMBER}</p>
+              <p><span class="text-ink-950">VAT ID:</span> ${COMPANY_VAT_ID}</p>
             </div>
           </div>
         </article>
@@ -1130,12 +1143,12 @@ export function renderContactPage(site: SiteData): string {
           <div class="space-y-5">
             <div>
               <p class="meta-label">Dispute resolution</p>
-              <h2 class="mt-2 text-2xl font-semibold tracking-tight text-white">Consumer arbitration</h2>
+              <h2 class="mt-2 text-2xl font-semibold tracking-tight text-ink-950">Consumer arbitration</h2>
             </div>
-            <p class="text-sm leading-7 text-ink-300">
+            <p class="text-sm leading-7 text-ink-700">
               Adanos Software GmbH does not participate in consumer arbitration proceedings and is not obliged to do so.
             </p>
-            <p class="text-sm leading-7 text-ink-300">
+            <p class="text-sm leading-7 text-ink-700">
               EU online dispute resolution platform:
               <a class="eyebrow-link" href="https://ec.europa.eu/consumers/odr" target="_blank" rel="noreferrer">ec.europa.eu/consumers/odr</a>
             </p>
@@ -1154,12 +1167,12 @@ export function renderNotFoundPage(): string {
     noIndex: true,
     body: `<section class="hero-note max-w-3xl px-6 py-8 sm:px-8 sm:py-10">
       <p class="meta-label">404</p>
-      <h1 class="mt-4 text-4xl font-bold tracking-tight text-white">This route does not exist.</h1>
-      <p class="mt-4 max-w-2xl text-base leading-8 text-ink-300">
+      <h1 class="mt-4 text-4xl font-medium tracking-tight text-ink-950">This route does not exist.</h1>
+      <p class="mt-4 max-w-2xl text-base leading-8 text-ink-700">
         Use the directory homepage or the full API search to get back to a valid section of saxi.ai.
       </p>
       <div class="mt-8 flex flex-wrap gap-3">
-        <a href="/" class="button-secondary">Go home</a>
+        <a href="/" class="button-secondary">Back to homepage</a>
         <a href="/apis/" class="button-secondary">Open all APIs</a>
       </div>
     </section>`
@@ -1545,23 +1558,19 @@ ${urls}
 export function renderFaviconSvg(): string {
   return `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128" fill="none">
-  <rect width="128" height="128" rx="32" fill="#07101A" />
-  <rect x="10" y="10" width="108" height="108" rx="26" fill="#151922" stroke="rgba(255,255,255,0.12)" />
-  <path d="M42 36H84L63 61L87 92H43L64 67L42 36Z" fill="#B8E9FF" fill-opacity="0.96" />
-  <path d="M49 31H92" stroke="#89C2FF" stroke-opacity="0.7" stroke-width="2.5" stroke-linecap="round" />
+  <rect width="128" height="128" rx="28" fill="#08090a" />
+  <path d="M40 88V40h20.5c11.8 0 19.5 6.4 19.5 16.2 0 6.8-3.8 12.1-10.2 14.4L86 88H72.4L57.8 70.6H52V88H40Zm12-28.6h7.6c5.2 0 8.4-2.7 8.4-6.8 0-4.2-3.2-6.7-8.4-6.7H52v13.5Z" fill="#f7f8f8" />
 </svg>`;
 }
 
 export function renderSocialCardSvg(): string {
   return `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" fill="none">
-  <rect width="1200" height="630" rx="48" fill="#06101A" />
-  <rect x="52" y="52" width="1096" height="526" rx="38" fill="#11141A" stroke="rgba(255,255,255,0.12)" />
-  <rect x="84" y="84" width="1032" height="462" rx="30" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.08)" />
-  <path d="M132 140H242" stroke="#89C2FF" stroke-opacity="0.6" stroke-width="2.5" stroke-linecap="round" />
-  <text x="132" y="188" fill="#B8E9FF" font-family="'IBM Plex Mono', monospace" font-size="28" letter-spacing="5">SAXI.AI</text>
-  <text x="132" y="286" fill="#F5F8FC" font-family="'Sora', sans-serif" font-size="72" font-weight="600">The API directory for</text>
-  <text x="132" y="372" fill="#F5F8FC" font-family="'Sora', sans-serif" font-size="72" font-weight="600">AI agents and developers.</text>
-  <text x="132" y="468" fill="#9BADC3" font-family="'Sora', sans-serif" font-size="34">Public APIs. Build-time rendered. Searchable. Cloudflare-ready.</text>
+  <rect width="1200" height="630" fill="#08090a" />
+  <rect x="72" y="72" width="1056" height="486" rx="16" fill="#121417" stroke="#ffffff14" />
+  <text x="108" y="168" fill="#8b93c7" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="24">saxi.ai</text>
+  <text x="108" y="268" fill="#f7f8f8" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="56">The API directory for</text>
+  <text x="108" y="340" fill="#f7f8f8" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="56">agents and developers.</text>
+  <text x="108" y="430" fill="#8a8f98" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="24">Free public APIs. Indexed, searchable, and ready to use.</text>
 </svg>`;
 }

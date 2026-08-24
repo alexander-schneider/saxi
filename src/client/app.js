@@ -149,10 +149,10 @@ function renderCard(api) {
         </div>
         <div class="space-y-2">
           <div class="flex items-center justify-between gap-3">
-            <h3 class="text-xl font-semibold tracking-tight text-white">${escapeHtml(api.name)}</h3>
-            <span class="font-mono text-xs uppercase tracking-[0.18em] text-ink-500">${escapeHtml(api.domain)}</span>
+            <h3 class="text-xl font-semibold tracking-tight text-ink-950">${escapeHtml(api.name)}</h3>
+            <span class="font-mono text-sm text-ink-500">${escapeHtml(api.domain)}</span>
           </div>
-          <p class="text-sm leading-7 text-ink-300">${escapeHtml(api.description)}</p>
+          <p class="text-sm leading-7 text-ink-700">${escapeHtml(api.description)}</p>
         </div>
         <div class="mt-auto flex flex-wrap gap-2">${badges}</div>
       </div>
@@ -315,3 +315,96 @@ function hydrateReportLinks() {
 
 hydrateSearchPage();
 hydrateReportLinks();
+hydrateThemeToggle();
+hydrateLlmCopy();
+
+function hydrateLlmCopy() {
+  const root = document.querySelector("[data-llm-copy]");
+  if (!(root instanceof HTMLElement)) {
+    return;
+  }
+
+  const input = root.querySelector(".header-llm-input");
+  const button = root.querySelector("[data-llm-copy-button]");
+  if (!(input instanceof HTMLInputElement) || !(button instanceof HTMLButtonElement)) {
+    return;
+  }
+
+  const idleLabel = button.textContent || "Copy";
+  let resetTimer = 0;
+
+  const selectPrompt = () => {
+    input.focus();
+    input.select();
+  };
+
+  const markCopied = () => {
+    button.dataset.copied = "true";
+    button.textContent = "Copied";
+    window.clearTimeout(resetTimer);
+    resetTimer = window.setTimeout(() => {
+      button.dataset.copied = "false";
+      button.textContent = idleLabel;
+    }, 1600);
+  };
+
+  const copyPrompt = async () => {
+    selectPrompt();
+    try {
+      await navigator.clipboard.writeText(input.value);
+      markCopied();
+    } catch {
+      const copied = document.execCommand("copy");
+      if (copied) {
+        markCopied();
+      }
+    }
+  };
+
+  input.addEventListener("focus", selectPrompt);
+  input.addEventListener("click", selectPrompt);
+  button.addEventListener("click", () => {
+    void copyPrompt();
+  });
+}
+
+function currentTheme() {
+  return document.documentElement.dataset.theme === "light" ? "light" : "dark";
+}
+
+function applyTheme(theme, persist) {
+  document.documentElement.dataset.theme = theme;
+  document.documentElement.style.colorScheme = theme;
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) {
+    meta.setAttribute("content", theme === "light" ? "#f7f8f8" : "#08090a");
+  }
+  if (persist) {
+    try {
+      localStorage.setItem("saxi-theme", theme);
+    } catch {
+      // ignore
+    }
+  }
+  syncThemeToggle(theme);
+}
+
+function syncThemeToggle(theme) {
+  const button = document.querySelector("[data-theme-toggle]");
+  if (!(button instanceof HTMLButtonElement)) {
+    return;
+  }
+  const isLight = theme === "light";
+  button.setAttribute("aria-pressed", isLight ? "true" : "false");
+  button.setAttribute("aria-label", isLight ? "Switch to dark mode" : "Switch to light mode");
+}
+
+function hydrateThemeToggle() {
+  applyTheme(currentTheme(), false);
+  const button = document.querySelector("[data-theme-toggle]");
+  if (button instanceof HTMLButtonElement) {
+    button.addEventListener("click", () => {
+      applyTheme(currentTheme() === "dark" ? "light" : "dark", true);
+    });
+  }
+}

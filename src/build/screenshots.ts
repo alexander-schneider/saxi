@@ -10,31 +10,14 @@ const CACHE_SCREENSHOT_DIR = ".cache/screenshots";
 function placeholderSvg(api: ApiEntry): string {
   return `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720" fill="none">
-  <defs>
-    <linearGradient id="bg" x1="80" y1="40" x2="1180" y2="720" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#0B1526" />
-      <stop offset="1" stop-color="#10243C" />
-    </linearGradient>
-    <linearGradient id="signal" x1="140" y1="120" x2="1000" y2="620" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#4BE3C2" stop-opacity="0.35" />
-      <stop offset="1" stop-color="#7AF1D7" stop-opacity="0.05" />
-    </linearGradient>
-  </defs>
-  <rect width="1280" height="720" rx="42" fill="url(#bg)" />
-  <rect x="32" y="32" width="1216" height="656" rx="30" stroke="rgba(255,255,255,0.16)" />
-  <rect x="76" y="76" width="1128" height="568" rx="28" fill="#09111E" />
-  <rect x="76" y="76" width="1128" height="568" rx="28" fill="url(#signal)" />
-  <rect x="122" y="120" width="260" height="38" rx="19" fill="rgba(255,255,255,0.08)" />
-  <rect x="122" y="194" width="660" height="70" rx="24" fill="rgba(255,255,255,0.08)" />
-  <rect x="122" y="296" width="940" height="24" rx="12" fill="rgba(255,255,255,0.08)" />
-  <rect x="122" y="338" width="892" height="24" rx="12" fill="rgba(255,255,255,0.08)" />
-  <rect x="122" y="380" width="732" height="24" rx="12" fill="rgba(255,255,255,0.08)" />
-  <rect x="122" y="474" width="150" height="46" rx="23" fill="rgba(75,227,194,0.18)" />
-  <rect x="292" y="474" width="182" height="46" rx="23" fill="rgba(255,255,255,0.08)" />
-  <rect x="494" y="474" width="210" height="46" rx="23" fill="rgba(255,255,255,0.08)" />
-  <text x="122" y="151" fill="#CFD7E5" font-family="'IBM Plex Mono', monospace" font-size="26" letter-spacing="3">${escapeHtml(api.primaryCategory.toUpperCase())}</text>
-  <text x="122" y="245" fill="#F5F7FB" font-family="'Space Grotesk', sans-serif" font-size="54" font-weight="700">${escapeHtml(api.name)}</text>
-  <text x="122" y="592" fill="#9FB0C8" font-family="'IBM Plex Mono', monospace" font-size="28">${escapeHtml(api.domain)}</text>
+  <rect width="1280" height="720" fill="#f7f3ea" />
+  <rect x="48" y="48" width="1184" height="624" rx="8" fill="#fcfaf6" stroke="#e3dccf" />
+  <text x="96" y="168" fill="#9a3d1a" font-family="'IBM Plex Mono', monospace" font-size="22">${escapeHtml(api.primaryCategory)}</text>
+  <text x="96" y="260" fill="#2c241c" font-family="Georgia, serif" font-size="52">${escapeHtml(api.name)}</text>
+  <rect x="96" y="312" width="720" height="16" rx="4" fill="#e3dccf" />
+  <rect x="96" y="348" width="640" height="16" rx="4" fill="#e3dccf" />
+  <rect x="96" y="384" width="520" height="16" rx="4" fill="#e3dccf" />
+  <text x="96" y="600" fill="#5c5349" font-family="'IBM Plex Mono', monospace" font-size="24">${escapeHtml(api.domain)}</text>
 </svg>`;
 }
 

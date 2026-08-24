@@ -1302,6 +1302,7 @@ export function renderApiManifest(site: SiteData): string {
     },
     endpoints: {
       manifest: absoluteUrl("/api/index.json"),
+      catalog: absoluteUrl("/api/catalog.json"),
       apis: absoluteUrl("/api/apis.json"),
       topics: absoluteUrl("/api/topics.json"),
       capabilities: absoluteUrl("/api/capabilities.json"),
@@ -1314,7 +1315,8 @@ export function renderApiManifest(site: SiteData): string {
       robots: absoluteUrl("/robots.txt")
     },
     notes: [
-      "Use /api/apis.json for stable machine-readable ingestion.",
+      "Use /api/catalog.json for agent ingestion. It is compact, public, and CORS-enabled.",
+      "Use /api/apis.json only when you need the full snapshot with extra metadata.",
       "Use /search-index.json only for lightweight UI-style search and ranking.",
       "saxi.ai currently publishes full snapshots, not incremental diffs."
     ]
@@ -1383,6 +1385,33 @@ export function renderPublicApis(site: SiteData): string {
       };
     })
   });
+}
+
+export function renderAgentCatalog(site: SiteData): string {
+  return JSON.stringify({
+    schemaVersion: "1.0",
+    generatedAt: site.generatedAt,
+    total: site.apis.length,
+    apis: site.apis.map((api) => ({
+      name: api.name,
+      docsUrl: api.docsUrl,
+      description: truncateText(api.description, 180),
+      authType: api.authType,
+      hasOpenApi: api.hasOpenApi,
+      isOfficial: api.isOfficial,
+      isFree: api.isFree,
+      section: slugify(api.primaryCategory),
+      topics: api.sourceCategories.slice(0, 6).map((title) => slugify(title)),
+      capabilities: api.capabilities.slice(0, 6).map((title) => slugify(title))
+    }))
+  });
+}
+
+function truncateText(value: string, maxLength: number): string {
+  if (value.length <= maxLength) {
+    return value;
+  }
+  return `${value.slice(0, maxLength - 1).trimEnd()}...`;
 }
 
 export function renderPublicTopics(site: SiteData): string {
@@ -1468,6 +1497,7 @@ export function renderPublicUpdates(site: SiteData): string {
     },
     endpoints: {
       manifest: absoluteUrl("/api/index.json"),
+      catalog: absoluteUrl("/api/catalog.json"),
       apis: absoluteUrl("/api/apis.json"),
       topics: absoluteUrl("/api/topics.json"),
       capabilities: absoluteUrl("/api/capabilities.json"),
@@ -1481,12 +1511,51 @@ export function renderPublicUpdates(site: SiteData): string {
 }
 
 export function renderRobotsTxt(): string {
-  return `User-agent: *
+  return `# Public machine feeds: /llms.txt and /api/catalog.json
+# These endpoints are intentionally open to AI agents and require no auth.
+
+User-agent: *
+Content-Signal: search=yes, ai-train=yes, ai-input=yes
+Allow: /llms.txt
+Allow: /llm.txt
+Allow: /api/
 Allow: /
-Disallow: /*?*
 Disallow: /apis/page/
 Disallow: /404.html
 Disallow: /contact/
+
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: Google-CloudVertexBot
+Allow: /
+
+User-agent: Gemini-Deep-Research
+Allow: /
+
+User-agent: GoogleOther
+Allow: /
+
+User-agent: Googlebot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
 
 Sitemap: ${SITE_ORIGIN}/sitemap.xml
 `;
@@ -1507,6 +1576,7 @@ export function renderLlmTxt(site: SiteData): string {
     `sitemap: ${SITE_ORIGIN}/sitemap.xml`,
     `robots: ${SITE_ORIGIN}/robots.txt`,
     `manifest: ${SITE_ORIGIN}/api/index.json`,
+    `catalog_feed: ${SITE_ORIGIN}/api/catalog.json`,
     `api_feed: ${SITE_ORIGIN}/api/apis.json`,
     `topics_feed: ${SITE_ORIGIN}/api/topics.json`,
     `capabilities_feed: ${SITE_ORIGIN}/api/capabilities.json`,
@@ -1539,6 +1609,7 @@ export function renderLlmTxt(site: SiteData): string {
     "",
     "machine_feeds:",
     `- Manifest: ${SITE_ORIGIN}/api/index.json`,
+    `- Catalog: ${SITE_ORIGIN}/api/catalog.json`,
     `- APIs: ${SITE_ORIGIN}/api/apis.json`,
     `- Topics: ${SITE_ORIGIN}/api/topics.json`,
     `- Capabilities: ${SITE_ORIGIN}/api/capabilities.json`,
@@ -1546,7 +1617,9 @@ export function renderLlmTxt(site: SiteData): string {
     `- Updates: ${SITE_ORIGIN}/api/updates.json`,
     "",
     "notes_for_agents:",
-    "- Use /api/apis.json for stable structured ingestion.",
+    "- These feeds are public, CORS-enabled, and do not require cookies, JS, or API keys.",
+    "- Use /api/catalog.json for ingestion. It is compact enough for LLM fetch tools.",
+    "- Use /api/apis.json only when you need the full snapshot.",
     "- Use /search-index.json for lightweight search only; it is optimized for the website UI.",
     "- Prefer docsUrl for execution and the static saxi.ai taxonomy pages for browsing and citation."
   ].join("\n");
@@ -1572,6 +1645,7 @@ export function renderLlmsTxt(site: SiteData): string {
     "",
     "## Machine-readable feeds",
     `- Manifest: ${SITE_ORIGIN}/api/index.json`,
+    `- Catalog: ${SITE_ORIGIN}/api/catalog.json`,
     `- APIs: ${SITE_ORIGIN}/api/apis.json`,
     `- Topics: ${SITE_ORIGIN}/api/topics.json`,
     `- Capabilities: ${SITE_ORIGIN}/api/capabilities.json`,
@@ -1580,8 +1654,9 @@ export function renderLlmsTxt(site: SiteData): string {
     `- Search Index: ${SITE_ORIGIN}/search-index.json`,
     "",
     "## Notes for agents",
-    "- The site indexes public APIs and includes availability metadata.",
-    "- Use /api/apis.json as the stable structured catalog.",
+    "- These feeds are public, CORS-enabled, and do not require cookies, JS, or API keys.",
+    "- Fetch /api/catalog.json for ingestion. It is the compact catalog for LLM tools.",
+    "- /api/apis.json is the full snapshot and is often too large for agent fetchers.",
     "- Use /search-index.json only for light search or ranking signals.",
     "- Prefer docsUrl when selecting execution targets.",
     "",

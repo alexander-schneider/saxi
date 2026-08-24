@@ -18,6 +18,7 @@ import {
   renderLlmTxt,
   renderLlmsTxt,
   renderNotFoundPage,
+  renderAgentCatalog,
   renderPublicApis,
   renderPublicCapabilities,
   renderPublicCollections,
@@ -109,6 +110,7 @@ async function buildSite(): Promise<void> {
   await writeOutputFile("robots.txt", renderRobotsTxt());
   await writeOutputFile("search-index.json", renderSearchIndex(site));
   await writeOutputFile("api/index.json", renderApiManifest(site));
+  await writeOutputFile("api/catalog.json", renderAgentCatalog(site));
   await writeOutputFile("api/apis.json", renderPublicApis(site));
   await writeOutputFile("api/topics.json", renderPublicTopics(site));
   await writeOutputFile("api/capabilities.json", renderPublicCapabilities(site));

@@ -1,3 +1,36 @@
+const MACHINE_FEED_PATHS = new Set([
+  "/llms.txt",
+  "/llm.txt",
+  "/robots.txt",
+  "/search-index.json"
+]);
+
+function isMachineFeed(pathname: string): boolean {
+  return MACHINE_FEED_PATHS.has(pathname) || pathname.startsWith("/api/");
+}
+
+function corsHeaders(): Headers {
+  return new Headers({
+    "access-control-allow-origin": "*",
+    "access-control-allow-methods": "GET, HEAD, OPTIONS",
+    "access-control-allow-headers": "*",
+    "access-control-max-age": "86400",
+    "cross-origin-resource-policy": "cross-origin"
+  });
+}
+
+function withCors(response: Response): Response {
+  const headers = new Headers(response.headers);
+  for (const [key, value] of corsHeaders()) {
+    headers.set(key, value);
+  }
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers
+  });
+}
+
 function json(body: unknown, init?: ResponseInit): Response {
   return new Response(JSON.stringify(body, null, 2), {
     ...init,
@@ -34,6 +67,10 @@ export default {
     const isWorkersDevHost = hostname.endsWith(".workers.dev");
     const isLocalHost = hostname === "localhost" || hostname === "127.0.0.1";
 
+    if (request.method === "OPTIONS" && isMachineFeed(url.pathname)) {
+      return new Response(null, { status: 204, headers: corsHeaders() });
+    }
+
     if (!isWorkersDevHost && !isLocalHost && (hostname === "www.saxi.ai" || url.protocol !== "https:")) {
       return redirectToCanonical(url);
     }
@@ -65,6 +102,7 @@ export default {
       return env.ASSETS.fetch(new Request(new URL("/favicon.svg", url), request));
     }
 
-    return env.ASSETS.fetch(request);
+    const response = await env.ASSETS.fetch(request);
+    return isMachineFeed(url.pathname) ? withCors(response) : response;
   }
 } satisfies ExportedHandler<Env>;

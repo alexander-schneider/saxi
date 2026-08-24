@@ -329,7 +329,6 @@ function renderEditorialSlice(intro: string, editorialSections: string[], apis: 
           )
           .join("")}
       </div>
-      <p class="text-sm leading-7 text-ink-400">Static taxonomy and collection pages are the canonical SEO landing pages on saxi.ai. Filters are for browsing, not indexing.</p>
     </aside>
   </section>`;
 }
@@ -777,7 +776,6 @@ export function renderApisLandingPage(site: SiteData, pager: PagerState): string
             </div>
             <p class="badge" data-results-count>${site.apis.length} APIs</p>
           </div>
-          <p class="text-sm text-ink-500">Filters update the URL for browsing convenience, but the canonical landing pages on saxi.ai are the static section, category, capability, and collection routes.</p>
           <div data-search-index="/search-index.json">
             ${renderApiGrid(site.apis.slice(0, PAGE_SIZE))}
           </div>

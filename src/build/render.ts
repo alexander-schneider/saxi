@@ -92,15 +92,20 @@ export function renderDocument(definition: PageDefinition): string {
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="${escapeHtml(definition.title)}" />
     <meta name="twitter:description" content="${escapeHtml(definition.description)}" />
-    <link rel="stylesheet" href="/assets/app.css?v=llm-copy" />
+    <link rel="stylesheet" href="/assets/app.css?v=hero-stats" />
     ${structuredData ?? ""}
   </head>
   <body>
     <a class="skip-link" href="#main">Skip to content</a>
-    ${renderHeader()}
+    ${renderHeader(Boolean(definition.sidebar))}
+    <div class="nav-backdrop" data-nav-backdrop hidden></div>
     <div class="shell pb-20 pt-8">
       <div class="${definition.sidebar ? "site-layout" : ""}">
-        ${definition.sidebar ? `<aside class="site-sidebar hidden xl:block">${definition.sidebar}</aside>` : ""}
+        ${
+          definition.sidebar
+            ? `<aside id="site-nav" class="site-sidebar" data-site-nav tabindex="-1">${definition.sidebar}</aside>`
+            : ""
+        }
         <div class="site-main">
           <main id="main" class="shell-grid py-6">
             ${definition.body}
@@ -109,16 +114,39 @@ export function renderDocument(definition: PageDefinition): string {
         </div>
       </div>
     </div>
-    <script src="/assets/app.js?v=llm-copy" defer></script>
+    <script src="/assets/app.js?v=nav-stack" defer></script>
   </body>
 </html>`;
 }
 
-function renderHeader(): string {
+function renderHeader(hasNav = false): string {
   const llmPrompt = escapeHtml(LLM_CATALOG_PROMPT);
+  const navToggle = hasNav
+    ? `<button
+          type="button"
+          class="nav-toggle"
+          data-nav-toggle
+          aria-expanded="false"
+          aria-controls="site-nav"
+          aria-label="Open menu"
+        >
+          <span class="nav-toggle-icons" aria-hidden="true">
+            <svg class="nav-toggle-icon nav-toggle-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+              <path d="M4 7h16M4 12h16M4 17h16" />
+            </svg>
+            <svg class="nav-toggle-icon nav-toggle-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+              <path d="M6 6l12 12M18 6L6 18" />
+            </svg>
+          </span>
+        </button>`
+    : "";
+
   return `<header class="site-header">
     <div class="site-header-inner">
-      <a href="/" class="site-logo" aria-label="saxi.ai home">saxi<span class="site-logo-tld">.ai</span></a>
+      <div class="header-brand">
+        ${navToggle}
+        <a href="/" class="site-logo" aria-label="saxi.ai home">saxi<span class="site-logo-tld">.ai</span></a>
+      </div>
       <div class="header-tools">
         <div class="header-llm" data-llm-copy>
           <label class="header-llm-kicker" for="llm-catalog-prompt">LLM</label>
@@ -251,6 +279,9 @@ function renderSidebar(site: SiteData, pathname: string): string {
     .join("");
 
   return `<div class="sidebar-stack">
+    <div class="sidebar-drawer-head">
+      <p class="sidebar-section-label">Menu</p>
+    </div>
     <section class="sidebar-panel">
       <p class="sidebar-section-label">Navigate</p>
       <div class="sidebar-list">${browseLinks}</div>
@@ -269,13 +300,54 @@ function renderSidebar(site: SiteData, pathname: string): string {
   </div>`;
 }
 
-function renderHero(title: string, eyebrow: string, description: string, actions?: string, iconSvg?: string): string {
+function renderHeroStats(stats: Array<{ label: string; value: string }>): string {
+  return `<div class="hero-stats">
+    ${stats
+      .map(
+        (stat) => `<div class="hero-stat">
+      <span class="meta-label">${escapeHtml(stat.label)}</span>
+      <strong>${escapeHtml(stat.value)}</strong>
+    </div>`
+      )
+      .join("")}
+  </div>`;
+}
+
+function renderHero(
+  title: string,
+  eyebrow: string,
+  description: string,
+  actions?: string,
+  iconSvg?: string,
+  stats?: Array<{ label: string; value: string }>
+): string {
+  const icon = iconSvg ? `<div class="hero-icon-wrap">${iconSvg}</div>` : "";
+  const heading = `<h1 class="max-w-4xl text-4xl font-medium tracking-tight text-ink-950 sm:text-5xl lg:text-[4rem] lg:leading-none">${title}</h1>`;
+  const lede = `<p class="max-w-3xl text-base leading-8 text-ink-700">${description}</p>`;
+
+  if (stats && stats.length > 0) {
+    return `<section class="hero-panel">
+    <div class="hero-grid">
+      <div class="hero-intro">
+        ${icon}
+        <p class="meta-label">${eyebrow}</p>
+      </div>
+      <div class="hero-copy">
+        ${heading}
+        ${lede}
+        ${actions ?? ""}
+      </div>
+      ${renderHeroStats(stats)}
+    </div>
+  </section>`;
+  }
+
   return `<section class="hero-panel">
     <div class="space-y-5">
-      ${iconSvg ? `<div class="hero-icon-wrap">${iconSvg}</div>` : ""}
+      ${icon}
       <p class="meta-label">${eyebrow}</p>
-      <h1 class="max-w-4xl text-4xl font-medium tracking-tight text-ink-950 sm:text-5xl lg:text-[4rem] lg:leading-none">${title}</h1>
-      <p class="max-w-3xl text-base leading-8 text-ink-700">${description}</p>
+      ${heading}
+      ${lede}
       ${actions ?? ""}
     </div>
   </section>`;
@@ -305,31 +377,14 @@ function summarizeSlice(apis: ApiEntry[]): Array<{ label: string; value: string 
   ];
 }
 
-function renderEditorialSlice(intro: string, editorialSections: string[], apis: ApiEntry[]): string {
-  const stats = summarizeSlice(apis);
-  return `<section class="grid gap-5 xl:grid-cols-[minmax(0,1.12fr)_minmax(280px,0.88fr)]">
+function renderEditorialSlice(intro: string, editorialSections: string[]): string {
+  return `<section>
     <article class="hero-note px-6 py-6 sm:px-8 sm:py-8">
       <div class="space-y-4">
         <p class="text-base leading-8 text-ink-600">${escapeHtml(intro)}</p>
         ${editorialSections.map((paragraph) => `<p class="text-base leading-8 text-ink-700">${escapeHtml(paragraph)}</p>`).join("")}
       </div>
     </article>
-    <aside class="glass-tile space-y-4">
-      <div>
-        <p class="meta-label">Snapshot</p>
-        <h2 class="mt-2 text-2xl font-semibold tracking-tight text-ink-950">Why this page matters</h2>
-      </div>
-      <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
-        ${stats
-          .map(
-            (stat) => `<div class="rounded-[0.8rem] border border-ink-200 bg-white/[0.02] px-4 py-3">
-              <p class="meta-label">${escapeHtml(stat.label)}</p>
-              <p class="mt-2 text-lg font-semibold tracking-tight text-ink-950">${escapeHtml(stat.value)}</p>
-            </div>`
-          )
-          .join("")}
-      </div>
-    </aside>
   </section>`;
 }
 
@@ -901,8 +956,8 @@ function renderTaxonomyBody(
 
   return [
     renderBreadcrumb(breadcrumb),
-    renderHero(item.title, eyebrow, item.description, undefined, categoryIcon(item.slug)),
-    renderEditorialSlice(item.intro, item.editorialSections, item.apis),
+    renderHero(item.title, eyebrow, item.description, undefined, categoryIcon(item.slug), summarizeSlice(item.apis)),
+    renderEditorialSlice(item.intro, item.editorialSections),
     `<section class="space-y-5">
       <div class="flex flex-wrap items-center justify-between gap-4">
         <div class="space-y-1">

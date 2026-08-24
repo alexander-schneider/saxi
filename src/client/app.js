@@ -317,6 +317,7 @@ hydrateSearchPage();
 hydrateReportLinks();
 hydrateThemeToggle();
 hydrateLlmCopy();
+hydrateMobileNav();
 
 function hydrateLlmCopy() {
   const root = document.querySelector("[data-llm-copy]");
@@ -407,4 +408,95 @@ function hydrateThemeToggle() {
       applyTheme(currentTheme() === "dark" ? "light" : "dark", true);
     });
   }
+}
+
+function hydrateMobileNav() {
+  const toggle = document.querySelector("[data-nav-toggle]");
+  const nav = document.querySelector("[data-site-nav]");
+  const backdrop = document.querySelector("[data-nav-backdrop]");
+  const main = document.querySelector(".site-main");
+  if (!(toggle instanceof HTMLButtonElement) || !(nav instanceof HTMLElement)) {
+    return;
+  }
+
+  const desktopQuery = window.matchMedia("(min-width: 80rem)");
+  let lastFocus = null;
+
+  const getFocusable = () => {
+    const nodes = [toggle, ...nav.querySelectorAll("a[href], button:not([disabled]), input, select, textarea")];
+    return nodes.filter((node) => node instanceof HTMLElement && !node.hasAttribute("disabled"));
+  };
+
+  const setOpen = (open) => {
+    const isDesktop = desktopQuery.matches;
+    if (isDesktop) {
+      open = false;
+    }
+
+    document.documentElement.toggleAttribute("data-nav-open", open);
+    toggle.setAttribute("aria-expanded", open ? "true" : "false");
+    toggle.setAttribute("aria-label", open ? "Close menu" : "Open menu");
+    nav.inert = isDesktop ? false : !open;
+    if (backdrop instanceof HTMLElement) {
+      backdrop.hidden = !open;
+    }
+    if (main instanceof HTMLElement) {
+      main.inert = open;
+    }
+
+    if (open) {
+      lastFocus = document.activeElement instanceof HTMLElement ? document.activeElement : toggle;
+      nav.focus({ preventScroll: true });
+      return;
+    }
+
+    if (lastFocus) {
+      lastFocus.focus({ preventScroll: true });
+      lastFocus = null;
+    }
+  };
+
+  toggle.addEventListener("click", () => {
+    setOpen(!document.documentElement.hasAttribute("data-nav-open"));
+  });
+
+  if (backdrop instanceof HTMLElement) {
+    backdrop.addEventListener("click", () => setOpen(false));
+  }
+
+  nav.addEventListener("click", (event) => {
+    const link = event.target instanceof Element ? event.target.closest("a[href]") : null;
+    if (link) {
+      setOpen(false);
+    }
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (!document.documentElement.hasAttribute("data-nav-open")) {
+      return;
+    }
+    if (event.key === "Escape") {
+      setOpen(false);
+      return;
+    }
+    if (event.key !== "Tab") {
+      return;
+    }
+    const focusable = getFocusable();
+    if (focusable.length === 0) {
+      return;
+    }
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  });
+
+  desktopQuery.addEventListener("change", () => setOpen(false));
+  setOpen(false);
 }

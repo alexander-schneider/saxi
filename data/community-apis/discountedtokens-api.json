@@ -1,0 +1,14 @@
+{
+  "name": "DiscountedTokens API",
+  "description": "Prepaid OpenAI-, Responses-, and Anthropic-compatible API access to GPT-5.x-family language models.",
+  "docsUrl": "https://discountedtokens.com/docs",
+  "websiteUrl": "https://discountedtokens.com",
+  "categories": ["Machine Learning", "Development"],
+  "auth": "API Key",
+  "cors": "Yes",
+  "https": true,
+  "free": false,
+  "addedAt": "2026-08-25",
+  "openapiUrl": "https://discountedtokens.com/openapi.json",
+  "notes": "The API has public documentation, model and pricing pages, an OpenAPI 3.1 description, and compatibility with common LLM client formats. Submitted by the operator for directory review."
+}

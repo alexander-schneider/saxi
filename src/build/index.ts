@@ -1,4 +1,4 @@
-import { mkdir, writeFile } from "node:fs/promises";
+import { copyFile, mkdir, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 
 import { PAGE_SIZE } from "./constants.js";
@@ -31,6 +31,7 @@ import {
   renderTopicPage,
   renderTaxonomyIndexPage
 } from "./render.js";
+import { SOCIAL_CARD_PATH } from "./social-card.js";
 import { materializeScreenshots } from "./screenshots.js";
 import { loadSourceRecords } from "./sources.js";
 import { chunk } from "./utils.js";
@@ -39,6 +40,12 @@ async function writeOutputFile(relativePath: string, content: string): Promise<v
   const targetPath = join("dist", relativePath);
   await mkdir(dirname(targetPath), { recursive: true });
   await writeFile(targetPath, content, "utf8");
+}
+
+async function copyOutputFile(sourcePath: string, relativePath: string): Promise<void> {
+  const targetPath = join("dist", relativePath);
+  await mkdir(dirname(targetPath), { recursive: true });
+  await copyFile(sourcePath, targetPath);
 }
 
 async function buildSite(): Promise<void> {
@@ -105,6 +112,7 @@ async function buildSite(): Promise<void> {
   await writeOutputFile("404.html", renderNotFoundPage());
   await writeOutputFile("favicon.svg", renderFaviconSvg());
   await writeOutputFile("social-card.svg", renderSocialCardSvg());
+  await copyOutputFile("src/assets/social-card.png", SOCIAL_CARD_PATH.slice(1));
   await writeOutputFile("llm.txt", renderLlmTxt(site));
   await writeOutputFile("llms.txt", renderLlmsTxt(site));
   await writeOutputFile("robots.txt", renderRobotsTxt());

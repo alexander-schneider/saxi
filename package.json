@@ -19,6 +19,7 @@
     "dev": "npm run build && wrangler dev",
     "screenshots:capture": "tsx src/build/capture-screenshots.ts",
     "screenshots:report": "tsx src/build/report-screenshots.ts",
+    "social-card": "tsx src/build/render-social-card.ts",
     "sources:refresh": "tsx src/build/refresh-vendor-sources.ts",
     "typecheck": "tsc --noEmit",
     "validate:community-apis": "tsx src/build/validate-community-apis.ts",

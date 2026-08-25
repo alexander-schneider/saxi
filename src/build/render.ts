@@ -16,6 +16,12 @@ import {
   SITE_TAGLINE,
   LLM_CATALOG_PROMPT
 } from "./constants.js";
+import {
+  SOCIAL_CARD_ALT,
+  SOCIAL_CARD_HEIGHT,
+  SOCIAL_CARD_PATH,
+  SOCIAL_CARD_WIDTH
+} from "./social-card.js";
 import { categoryIcon } from "./topic-icons.js";
 import type { ApiEntry, CollectionPage, SiteData, TaxonomyPage } from "./types.js";
 import { compareStrings, escapeHtml, slugify } from "./utils.js";
@@ -86,12 +92,16 @@ export function renderDocument(definition: PageDefinition): string {
     <meta property="og:title" content="${escapeHtml(definition.title)}" />
     <meta property="og:description" content="${escapeHtml(definition.description)}" />
     <meta property="og:url" content="${canonicalUrl}" />
-    <meta property="og:image" content="${SITE_ORIGIN}/social-card.png" />
-    <meta property="og:image:width" content="1200" />
-    <meta property="og:image:height" content="630" />
+    <meta property="og:image" content="${SITE_ORIGIN}${SOCIAL_CARD_PATH}" />
+    <meta property="og:image:alt" content="${escapeHtml(SOCIAL_CARD_ALT)}" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="${SOCIAL_CARD_WIDTH}" />
+    <meta property="og:image:height" content="${SOCIAL_CARD_HEIGHT}" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="${escapeHtml(definition.title)}" />
     <meta name="twitter:description" content="${escapeHtml(definition.description)}" />
+    <meta name="twitter:image" content="${SITE_ORIGIN}${SOCIAL_CARD_PATH}" />
+    <meta name="twitter:image:alt" content="${escapeHtml(SOCIAL_CARD_ALT)}" />
     <link rel="stylesheet" href="/assets/app.css?v=hero-stats" />
     ${structuredData ?? ""}
   </head>
@@ -726,6 +736,8 @@ export function renderHomePage(site: SiteData): string {
         "@type": "Organization",
         name: SITE_NAME,
         url: SITE_ORIGIN,
+        image: `${SITE_ORIGIN}${SOCIAL_CARD_PATH}`,
+        logo: `${SITE_ORIGIN}/favicon.svg`,
         contactPoint: {
           "@type": "ContactPoint",
           email: CONTACT_EMAIL,
@@ -1693,12 +1705,11 @@ export function renderFaviconSvg(): string {
 
 export function renderSocialCardSvg(): string {
   return `<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" fill="none">
-  <rect width="1200" height="630" fill="#08090a" />
-  <rect x="72" y="72" width="1056" height="486" rx="16" fill="#121417" stroke="#ffffff14" />
-  <text x="108" y="168" fill="#8b93c7" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="24">saxi.ai</text>
-  <text x="108" y="268" fill="#f7f8f8" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="56">The API directory for</text>
-  <text x="108" y="340" fill="#f7f8f8" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="56">agents and developers.</text>
-  <text x="108" y="430" fill="#8a8f98" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="24">Free public APIs. Indexed, searchable, and ready to use.</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="${SOCIAL_CARD_WIDTH}" height="${SOCIAL_CARD_HEIGHT}" viewBox="0 0 ${SOCIAL_CARD_WIDTH} ${SOCIAL_CARD_HEIGHT}" fill="none">
+  <rect width="${SOCIAL_CARD_WIDTH}" height="${SOCIAL_CARD_HEIGHT}" fill="#08090a" />
+  <text x="96" y="122" fill="#f7f8f8" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="34" font-weight="600" letter-spacing="-1.3">saxi<tspan fill="#f7f8f885">.ai</tspan></text>
+  <text x="96" y="286" fill="#f7f8f8" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="64" font-weight="500">The API directory for</text>
+  <text x="96" y="364" fill="#f7f8f8" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="64" font-weight="500">AI agents and developers.</text>
+  <text x="96" y="430" fill="#8a8f98" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="26">Free public APIs. Indexed, searchable, and ready to use.</text>
 </svg>`;
 }

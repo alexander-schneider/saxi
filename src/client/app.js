@@ -391,22 +391,24 @@ function applyTheme(theme, persist) {
 }
 
 function syncThemeToggle(theme) {
-  const button = document.querySelector("[data-theme-toggle]");
-  if (!(button instanceof HTMLButtonElement)) {
-    return;
-  }
   const isLight = theme === "light";
-  button.setAttribute("aria-pressed", isLight ? "true" : "false");
-  button.setAttribute("aria-label", isLight ? "Switch to dark mode" : "Switch to light mode");
+  for (const button of document.querySelectorAll("[data-theme-toggle]")) {
+    if (!(button instanceof HTMLButtonElement)) {
+      continue;
+    }
+    button.setAttribute("aria-pressed", isLight ? "true" : "false");
+    button.setAttribute("aria-label", isLight ? "Switch to dark mode" : "Switch to light mode");
+  }
 }
 
 function hydrateThemeToggle() {
   applyTheme(currentTheme(), false);
-  const button = document.querySelector("[data-theme-toggle]");
-  if (button instanceof HTMLButtonElement) {
-    button.addEventListener("click", () => {
-      applyTheme(currentTheme() === "dark" ? "light" : "dark", true);
-    });
+  for (const button of document.querySelectorAll("[data-theme-toggle]")) {
+    if (button instanceof HTMLButtonElement) {
+      button.addEventListener("click", () => {
+        applyTheme(currentTheme() === "dark" ? "light" : "dark", true);
+      });
+    }
   }
 }
 

@@ -102,7 +102,7 @@ export function renderDocument(definition: PageDefinition): string {
     <meta name="twitter:description" content="${escapeHtml(definition.description)}" />
     <meta name="twitter:image" content="${SITE_ORIGIN}${SOCIAL_CARD_PATH}" />
     <meta name="twitter:image:alt" content="${escapeHtml(SOCIAL_CARD_ALT)}" />
-    <link rel="stylesheet" href="/assets/app.css?v=hero-stats" />
+    <link rel="stylesheet" href="/assets/app.css?v=nav-theme" />
     ${structuredData ?? ""}
   </head>
   <body>
@@ -124,9 +124,46 @@ export function renderDocument(definition: PageDefinition): string {
         </div>
       </div>
     </div>
-    <script src="/assets/app.js?v=nav-stack" defer></script>
+    <script src="/assets/app.js?v=nav-theme" defer></script>
   </body>
 </html>`;
+}
+
+function renderThemeToggleIcons(): string {
+  return `<span class="theme-toggle-icons" aria-hidden="true">
+    <svg class="theme-toggle-icon theme-toggle-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+      <circle cx="12" cy="12" r="4" />
+      <path d="M12 3v1.5M12 19.5V21M4.22 4.22l1.06 1.06M18.72 18.72l1.06 1.06M3 12h1.5M19.5 12H21M4.22 19.78l1.06-1.06M18.72 5.28l1.06-1.06" />
+    </svg>
+    <svg class="theme-toggle-icon theme-toggle-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 14.5A8.5 8.5 0 1 1 9.5 3 7 7 0 0 0 21 14.5z" />
+    </svg>
+  </span>`;
+}
+
+function renderHeaderThemeToggle(): string {
+  return `<button
+          type="button"
+          class="theme-toggle"
+          data-theme-toggle
+          aria-pressed="false"
+          aria-label="Switch to light mode"
+        >
+          ${renderThemeToggleIcons()}
+        </button>`;
+}
+
+function renderNavThemeToggle(): string {
+  return `<button
+      type="button"
+      class="sidebar-theme"
+      data-theme-toggle
+      aria-pressed="false"
+      aria-label="Switch to light mode"
+    >
+      <span class="sidebar-theme-label">Theme</span>
+      <span class="theme-toggle" aria-hidden="true">${renderThemeToggleIcons()}</span>
+    </button>`;
 }
 
 function renderHeader(hasNav = false): string {
@@ -173,23 +210,7 @@ function renderHeader(hasNav = false): string {
           <button class="header-llm-copy" type="button" data-llm-copy-button aria-live="polite" aria-label="Copy catalog prompt">Copy</button>
         </div>
         <div class="header-tools-end">
-        <button
-          type="button"
-          class="theme-toggle"
-          data-theme-toggle
-          aria-pressed="false"
-          aria-label="Switch to light mode"
-        >
-          <span class="theme-toggle-icons" aria-hidden="true">
-            <svg class="theme-toggle-icon theme-toggle-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
-              <circle cx="12" cy="12" r="4" />
-              <path d="M12 3v1.5M12 19.5V21M4.22 4.22l1.06 1.06M18.72 18.72l1.06 1.06M3 12h1.5M19.5 12H21M4.22 19.78l1.06-1.06M18.72 5.28l1.06-1.06" />
-            </svg>
-            <svg class="theme-toggle-icon theme-toggle-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M21 14.5A8.5 8.5 0 1 1 9.5 3 7 7 0 0 0 21 14.5z" />
-            </svg>
-          </span>
-        </button>
+        ${renderHeaderThemeToggle()}
         <form action="/apis/" method="get" class="header-search">
           <label class="sr-only" for="site-search">Search APIs</label>
           <input
@@ -290,7 +311,7 @@ function renderSidebar(site: SiteData, pathname: string): string {
 
   return `<div class="sidebar-stack">
     <div class="sidebar-drawer-head">
-      <p class="sidebar-section-label">Menu</p>
+      ${renderNavThemeToggle()}
     </div>
     <section class="sidebar-panel">
       <p class="sidebar-section-label">Navigate</p>

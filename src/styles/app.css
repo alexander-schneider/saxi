@@ -589,12 +589,44 @@
   }
 
   .sidebar-drawer-head {
-    padding-block: 0.15rem 0.75rem;
+    padding-block: 0.15rem 0.35rem;
+  }
+
+  .sidebar-theme {
+    display: flex;
+    width: 100%;
+    min-height: 2.75rem;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    border-radius: 0.5rem;
+    padding-block: 0.25rem;
+    padding-inline: 0.625rem 0.15rem;
+    color: var(--color-ink-950);
+  }
+
+  .sidebar-theme:hover {
+    background: color-mix(in oklab, var(--color-ink) 6%, transparent);
+  }
+
+  .sidebar-theme-label {
+    font-size: 0.9375rem;
+    font-weight: 510;
+    letter-spacing: -0.01em;
+    line-height: 1;
+  }
+
+  .sidebar-theme .theme-toggle {
+    pointer-events: none;
   }
 
   @media (max-width: 79.99rem) {
     html[data-nav-open] .shell {
       z-index: auto;
+    }
+
+    body:has([data-site-nav]) .header-tools .theme-toggle {
+      display: none;
     }
 
     .site-sidebar {
@@ -1171,6 +1203,7 @@
     .nav-pill,
     .theme-toggle,
     .nav-toggle,
+    .sidebar-theme,
     .button-cta {
       transition-property: transform, background-color, box-shadow, color;
       transition-duration: 150ms;
@@ -1183,6 +1216,7 @@
     .header-search-button:active,
     .header-llm-copy:active,
     .nav-pill:active,
+    .sidebar-theme:active,
     .button-cta:active {
       transform: scale(0.96);
     }

@@ -1,0 +1,14 @@
+{
+  "name": "Worklittle",
+  "description": "Job search, over 4 million jobs.",
+  "docsUrl": "https://docs.worklittle.com",
+  "websiteUrl": "https://worklittle.com",
+  "categories": ["Jobs", "Search"],
+  "auth": "API Key",
+  "cors": "Yes",
+  "https": true,
+  "free": true,
+  "addedAt": "2026-08-24",
+  "openapiUrl": "https://docs.worklittle.com/openapi/openapi.yaml",
+  "notes": "Public REST API at api.worklittle.com with documented free monthly quotas for job search, salary averages, and company search. OpenAPI spec and remote MCP are published. CORS is open on the jobs API."
+}

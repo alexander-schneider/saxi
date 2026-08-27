@@ -85,6 +85,7 @@ export function renderDocument(definition: PageDefinition): string {
     ${definition.noIndex ? '<meta name="robots" content="noindex, follow" />' : '<meta name="robots" content="index, follow" />'}
     <link rel="canonical" href="${canonicalUrl}" />
     <link rel="alternate" type="text/markdown" title="Markdown" href="${canonicalUrl}" />
+    <link rel="describedby" href="${SITE_ORIGIN}/llms.txt" type="text/plain" title="llms.txt" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="preload" href="/assets/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="/assets/fonts/ibm-plex-mono-latin-400.woff2" as="font" type="font/woff2" crossorigin />
@@ -1307,14 +1308,6 @@ function renderJson(value: unknown): string {
   return JSON.stringify(value, null, 2);
 }
 
-export function renderMcpDiscovery(): string {
-  return renderJson({
-    name: SITE_NAME,
-    description: "Public API directory for AI agents and developers.",
-    endpoint: `${SITE_ORIGIN}/mcp`
-  });
-}
-
 function buildCollectionMembership(site: SiteData): Map<string, CollectionPage[]> {
   const membership = new Map<string, CollectionPage[]>();
 
@@ -1349,6 +1342,9 @@ export function renderApiManifest(site: SiteData): string {
       catalogSlices: absoluteUrl("/api/catalog/index.json"),
       mcp: `${SITE_ORIGIN}/mcp`,
       mcpDiscovery: absoluteUrl("/.well-known/mcp.json"),
+      mcpServerCard: absoluteUrl("/.well-known/mcp/server-card.json"),
+      openapi: absoluteUrl("/api/openapi.json"),
+      apiCatalog: absoluteUrl("/.well-known/api-catalog"),
       apis: absoluteUrl("/api/apis.json"),
       topics: absoluteUrl("/api/topics.json"),
       capabilities: absoluteUrl("/api/capabilities.json"),
@@ -1631,7 +1627,7 @@ Content-Signal: search=yes, ai-train=yes, ai-input=yes
 Allow: /llms.txt
 Allow: /llm.txt
 Allow: /mcp
-Allow: /.well-known/mcp.json
+Allow: /.well-known/
 Allow: /api/
 Allow: /
 Disallow: /apis/page/
@@ -1791,6 +1787,10 @@ export function renderLlmsTxt(site: SiteData): string {
     `- Manifest: ${SITE_ORIGIN}/api/index.json`,
     `- MCP: ${SITE_ORIGIN}/mcp`,
     `- MCP discovery: ${SITE_ORIGIN}/.well-known/mcp.json`,
+    `- MCP server card: ${SITE_ORIGIN}/.well-known/mcp/server-card.json`,
+    `- API catalog: ${SITE_ORIGIN}/.well-known/api-catalog`,
+    `- OpenAPI: ${SITE_ORIGIN}/api/openapi.json`,
+    `- Agent skills: ${SITE_ORIGIN}/.well-known/agent-skills/index.json`,
     `- Catalog: ${SITE_ORIGIN}/api/catalog.json`,
     `- APIs: ${SITE_ORIGIN}/api/apis.json`,
     `- Topics: ${SITE_ORIGIN}/api/topics.json`,

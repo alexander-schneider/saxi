@@ -219,6 +219,7 @@ export function renderHomeMarkdown(site: SiteData): string {
       "## Machine feeds",
       "",
       `- MCP: ${SITE_ORIGIN}/mcp`,
+      `- MCP server card: ${SITE_ORIGIN}/.well-known/mcp/server-card.json`,
       `- Search: ${SITE_ORIGIN}/api/search.json?q=weather`,
       `- Catalog slices: ${SITE_ORIGIN}/api/catalog/index.json`,
       `- Catalog: ${SITE_ORIGIN}/api/catalog.json`,

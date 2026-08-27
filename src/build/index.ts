@@ -1,7 +1,15 @@
-import { copyFile, mkdir, writeFile } from "node:fs/promises";
+import { createHash } from "node:crypto";
+import { copyFile, mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 
-import { PAGE_SIZE } from "./constants.js";
+import {
+  renderA2aAgentCard,
+  renderAgentSkillsIndex,
+  renderApiCatalog,
+  renderMcpServerCard,
+  renderOpenApi
+} from "./agent-discovery.js";
+import { PAGE_SIZE, SITE_ORIGIN } from "./constants.js";
 import { applyIgnoreList, loadIgnoreList } from "./ignore-list.js";
 import { buildSiteData, normalizeRecords } from "./normalize.js";
 import {
@@ -30,7 +38,6 @@ import {
   renderHomePage,
   renderLlmTxt,
   renderLlmsTxt,
-  renderMcpDiscovery,
   renderNotFoundPage,
   renderAgentCatalog,
   renderCatalogSlice,
@@ -148,8 +155,27 @@ async function buildSite(): Promise<void> {
   await copyOutputFile("src/assets/social-card.png", SOCIAL_CARD_PATH.slice(1));
   await writeOutputFile("llm.txt", renderLlmTxt(site));
   await writeOutputFile("llms.txt", renderLlmsTxt(site));
-  await writeOutputFile(".well-known/mcp.json", renderMcpDiscovery());
   await writeOutputFile("robots.txt", renderRobotsTxt());
+  await writeOutputFile("api/openapi.json", renderOpenApi());
+  const mcpCard = renderMcpServerCard();
+  await writeOutputFile(".well-known/mcp.json", mcpCard);
+  await writeOutputFile(".well-known/mcp/server-card.json", mcpCard);
+  await writeOutputFile(".well-known/api-catalog", renderApiCatalog());
+  await writeOutputFile(".well-known/agent-card.json", renderA2aAgentCard());
+  const recommendSkill = await readFile("src/agent-skills/recommend-apis/SKILL.md", "utf8");
+  await writeOutputFile(".well-known/agent-skills/recommend-apis/SKILL.md", recommendSkill);
+  await writeOutputFile(
+    ".well-known/agent-skills/index.json",
+    renderAgentSkillsIndex([
+      {
+        name: "recommend-apis",
+        description:
+          "Recommend public APIs from the saxi.ai directory. Use MCP search_apis or GET /api/search.json?q=.",
+        url: `${SITE_ORIGIN}/.well-known/agent-skills/recommend-apis/SKILL.md`,
+        digest: `sha256:${createHash("sha256").update(recommendSkill).digest("hex")}`
+      }
+    ])
+  );
   await writeOutputFile("search-index.json", renderSearchIndex(site));
   await writeOutputFile("api/index.json", renderApiManifest(site));
   await writeOutputFile("api/catalog.json", renderAgentCatalog(site));

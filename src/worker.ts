@@ -11,8 +11,7 @@ const MACHINE_FEED_PATHS = new Set([
   "/llms.txt",
   "/llm.txt",
   "/robots.txt",
-  "/search-index.json",
-  "/.well-known/mcp.json"
+  "/search-index.json"
 ]);
 
 const MARKDOWN_SKIP_PATHS = new Set([
@@ -32,8 +31,12 @@ function isMcpPath(pathname: string): boolean {
   return pathname === "/mcp" || pathname.startsWith("/mcp/");
 }
 
+function isWellKnownPath(pathname: string): boolean {
+  return pathname === "/.well-known" || pathname.startsWith("/.well-known/");
+}
+
 function isMachineFeed(pathname: string): boolean {
-  return MACHINE_FEED_PATHS.has(pathname) || pathname.startsWith("/api/") || isMcpPath(pathname);
+  return MACHINE_FEED_PATHS.has(pathname) || pathname.startsWith("/api/") || isMcpPath(pathname) || isWellKnownPath(pathname);
 }
 
 function corsHeaders(): Headers {
@@ -74,9 +77,22 @@ function appendVary(headers: Headers, value: string): void {
   }
 }
 
-function withAcceptVary(response: Response): Response {
+function appendLink(headers: Headers, value: string): void {
+  const existing = headers.get("link");
+  headers.set("link", existing ? `${existing}, ${value}` : value);
+}
+
+function withDiscoveryHeaders(response: Response, pathname: string): Response {
   const headers = new Headers(response.headers);
   appendVary(headers, "Accept");
+  appendLink(headers, '</.well-known/api-catalog>; rel="api-catalog"');
+  appendLink(headers, '</api/openapi.json>; rel="service-desc"; type="application/json"');
+  appendLink(headers, '</llms.txt>; rel="describedby"; type="text/plain"');
+  appendLink(headers, '</>; rel="service-doc"; type="text/html"');
+  const markdownPath = markdownAssetPath(pathname);
+  if (markdownPath) {
+    appendLink(headers, `<${markdownPath}>; rel="alternate"; type="text/markdown"`);
+  }
   return new Response(response.body, {
     status: response.status,
     statusText: response.statusText,
@@ -395,10 +411,21 @@ export default {
       }
     }
 
+    if (url.pathname === "/.well-known/api-catalog" && response.ok) {
+      const headers = new Headers(response.headers);
+      headers.set("content-type", "application/linkset+json");
+      const catalog = new Response(method === "HEAD" ? null : response.body, {
+        status: response.status,
+        statusText: response.statusText,
+        headers
+      });
+      return withCors(catalog);
+    }
+
     if (isMachineFeed(url.pathname)) {
       return withCors(response);
     }
 
-    return markdownAssetPath(url.pathname) ? withAcceptVary(response) : response;
+    return markdownAssetPath(url.pathname) ? withDiscoveryHeaders(response, url.pathname) : response;
   }
 } satisfies ExportedHandler<Env>;

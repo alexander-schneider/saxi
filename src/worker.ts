@@ -2,15 +2,17 @@ import {
   AGENT_SEARCH_DEFAULT_LIMIT,
   AGENT_SEARCH_MAX_QUERY_LENGTH,
   clampSearchLimit,
-  searchApis,
-  type SearchableApi
+  searchApis
 } from "./agent-search.js";
+import { loadCatalogApis } from "./catalog-feed.js";
+import { handleSaxiMcp } from "./mcp.js";
 
 const MACHINE_FEED_PATHS = new Set([
   "/llms.txt",
   "/llm.txt",
   "/robots.txt",
-  "/search-index.json"
+  "/search-index.json",
+  "/.well-known/mcp.json"
 ]);
 
 const MARKDOWN_SKIP_PATHS = new Set([
@@ -26,8 +28,12 @@ const MARKDOWN_SKIP_PATHS = new Set([
   "/search-index.json"
 ]);
 
+function isMcpPath(pathname: string): boolean {
+  return pathname === "/mcp" || pathname.startsWith("/mcp/");
+}
+
 function isMachineFeed(pathname: string): boolean {
-  return MACHINE_FEED_PATHS.has(pathname) || pathname.startsWith("/api/");
+  return MACHINE_FEED_PATHS.has(pathname) || pathname.startsWith("/api/") || isMcpPath(pathname);
 }
 
 function corsHeaders(): Headers {
@@ -87,74 +93,6 @@ function json(body: unknown, init?: ResponseInit): Response {
       ...init?.headers
     }
   });
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
-}
-
-function stringArray(value: unknown): string[] {
-  return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
-}
-
-function parseCatalogApis(payload: unknown): SearchableApi[] | null {
-  if (!isRecord(payload) || !Array.isArray(payload.apis)) {
-    return null;
-  }
-
-  const apis: SearchableApi[] = [];
-  for (const entry of payload.apis) {
-    if (!isRecord(entry)) {
-      continue;
-    }
-    if (
-      typeof entry.name !== "string" ||
-      typeof entry.docsUrl !== "string" ||
-      typeof entry.description !== "string" ||
-      typeof entry.authType !== "string"
-    ) {
-      continue;
-    }
-
-    const api: SearchableApi = {
-      name: entry.name,
-      docsUrl: entry.docsUrl,
-      description: entry.description,
-      authType: entry.authType,
-      hasOpenApi: entry.hasOpenApi === true,
-      isOfficial: entry.isOfficial === true,
-      topics: stringArray(entry.topics),
-      capabilities: stringArray(entry.capabilities)
-    };
-    if (typeof entry.section === "string") {
-      api.section = entry.section;
-    }
-    apis.push(api);
-  }
-
-  return apis;
-}
-
-let catalogApisCache: SearchableApi[] | null = null;
-
-async function loadCatalogApis(env: Env, origin: string): Promise<SearchableApi[] | null> {
-  if (catalogApisCache) {
-    return catalogApisCache;
-  }
-
-  const response = await env.ASSETS.fetch(new Request(new URL("/api/catalog.json", origin), { method: "GET" }));
-  if (!response.ok) {
-    return null;
-  }
-
-  const payload: unknown = await response.json();
-  const apis = parseCatalogApis(payload);
-  if (!apis) {
-    return null;
-  }
-
-  catalogApisCache = apis;
-  return catalogApisCache;
 }
 
 function jsonFeed(body: unknown, status = 200, cacheControl = "public, max-age=3600"): Response {
@@ -364,7 +302,7 @@ async function markdownResponse(
 }
 
 export default {
-  async fetch(request, env): Promise<Response> {
+  async fetch(request, env, ctx): Promise<Response> {
     const url = new URL(request.url);
     const hostname = url.hostname.toLowerCase();
     const isWorkersDevHost = hostname.endsWith(".workers.dev");
@@ -372,7 +310,7 @@ export default {
     const method = request.method.toUpperCase();
     const acceptMarkdown = prefersMarkdown(request.headers.get("accept"));
 
-    if (method === "OPTIONS" && (isMachineFeed(url.pathname) || acceptMarkdown)) {
+    if (method === "OPTIONS" && (isMachineFeed(url.pathname) || acceptMarkdown) && !isMcpPath(url.pathname)) {
       return new Response(null, { status: 204, headers: corsHeaders() });
     }
 
@@ -387,6 +325,14 @@ export default {
       request.headers.has("cf-connecting-ip")
     ) {
       return redirectToCanonical(url);
+    }
+
+    if (url.pathname === "/mcp/") {
+      return redirectToPath(url, "/mcp");
+    }
+
+    if (url.pathname === "/mcp") {
+      return handleSaxiMcp(request, env, ctx);
     }
 
     if (url.pathname === "/collections/free-apis-for-ai-agents/" || url.pathname === "/collections/free-apis-for-ai-agents") {

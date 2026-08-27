@@ -34,5 +34,10 @@
     "typescript": "^5.9.2",
     "wrangler": "^4.13.0",
     "yaml": "^2.8.1"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/server": "^2.0.0",
+    "agents": "^0.21.0",
+    "zod": "^4.4.3"
   }
 }

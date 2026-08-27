@@ -1307,6 +1307,14 @@ function renderJson(value: unknown): string {
   return JSON.stringify(value, null, 2);
 }
 
+export function renderMcpDiscovery(): string {
+  return renderJson({
+    name: SITE_NAME,
+    description: "Public API directory for AI agents and developers.",
+    endpoint: `${SITE_ORIGIN}/mcp`
+  });
+}
+
 function buildCollectionMembership(site: SiteData): Map<string, CollectionPage[]> {
   const membership = new Map<string, CollectionPage[]>();
 
@@ -1339,6 +1347,8 @@ export function renderApiManifest(site: SiteData): string {
       search: `${SITE_ORIGIN}/api/search.json?q=`,
       catalog: absoluteUrl("/api/catalog.json"),
       catalogSlices: absoluteUrl("/api/catalog/index.json"),
+      mcp: `${SITE_ORIGIN}/mcp`,
+      mcpDiscovery: absoluteUrl("/.well-known/mcp.json"),
       apis: absoluteUrl("/api/apis.json"),
       topics: absoluteUrl("/api/topics.json"),
       capabilities: absoluteUrl("/api/capabilities.json"),
@@ -1351,7 +1361,8 @@ export function renderApiManifest(site: SiteData): string {
       robots: absoluteUrl("/robots.txt")
     },
     notes: [
-      "To recommend APIs, GET /api/search.json?q=weather — top 20 results with name, docsUrl, description, and authType.",
+      "MCP at /mcp — tools search_apis, list_capabilities, get_slice. No auth. Streamable HTTP.",
+      "To recommend APIs over HTTP, GET /api/search.json?q=weather — top 20 results with name, docsUrl, description, and authType.",
       "Capability slices live at /api/catalog/{slug}.json, for example /api/catalog/geocoding.json and /api/catalog/search.json.",
       "Topic slices live at /api/catalog/topic/{slug}.json. The slice index is /api/catalog/index.json.",
       "Use /api/catalog.json only when you need the full compact directory.",
@@ -1598,6 +1609,7 @@ export function renderPublicUpdates(site: SiteData): string {
       search: `${SITE_ORIGIN}/api/search.json?q=`,
       catalog: absoluteUrl("/api/catalog.json"),
       catalogSlices: absoluteUrl("/api/catalog/index.json"),
+      mcp: `${SITE_ORIGIN}/mcp`,
       apis: absoluteUrl("/api/apis.json"),
       topics: absoluteUrl("/api/topics.json"),
       capabilities: absoluteUrl("/api/capabilities.json"),
@@ -1611,13 +1623,15 @@ export function renderPublicUpdates(site: SiteData): string {
 }
 
 export function renderRobotsTxt(): string {
-  return `# Public machine feeds: /llms.txt, /api/search.json, and /api/catalog/*.json
+  return `# Public machine feeds: /llms.txt, /mcp, /api/search.json, and /api/catalog/*.json
 # These endpoints are intentionally open to AI agents and require no auth.
 
 User-agent: *
 Content-Signal: search=yes, ai-train=yes, ai-input=yes
 Allow: /llms.txt
 Allow: /llm.txt
+Allow: /mcp
+Allow: /.well-known/mcp.json
 Allow: /api/
 Allow: /
 Disallow: /apis/page/
@@ -1678,6 +1692,7 @@ export function renderLlmTxt(site: SiteData): string {
     `manifest: ${SITE_ORIGIN}/api/index.json`,
     `catalog_feed: ${SITE_ORIGIN}/api/catalog.json`,
     `catalog_slices: ${SITE_ORIGIN}/api/catalog/index.json`,
+    `mcp: ${SITE_ORIGIN}/mcp`,
     `search_feed: ${SITE_ORIGIN}/api/search.json?q=`,
     `api_feed: ${SITE_ORIGIN}/api/apis.json`,
     `topics_feed: ${SITE_ORIGIN}/api/topics.json`,
@@ -1690,7 +1705,7 @@ export function renderLlmTxt(site: SiteData): string {
     "- saxi.ai aggregates public API repositories and normalizes them into a crawlable directory.",
     "- V1 focuses on public APIs for AI agents and developers.",
     "- Prefer canonical HTML pages for browsing and citation; send Accept: text/markdown for a chrome-free representation of the same URL.",
-    "- Use /api/search.json?q= and /api/catalog/{capability}.json for machine-assisted filtering.",
+    "- Prefer MCP at /mcp (search_apis, list_capabilities, get_slice) or /api/search.json?q= and /api/catalog/{capability}.json.",
     "",
     "key_pages:",
     `- Home: ${SITE_ORIGIN}/`,
@@ -1712,6 +1727,7 @@ export function renderLlmTxt(site: SiteData): string {
     "",
     "machine_feeds:",
     `- Manifest: ${SITE_ORIGIN}/api/index.json`,
+    `- MCP: ${SITE_ORIGIN}/mcp`,
     `- Search: ${SITE_ORIGIN}/api/search.json?q=weather`,
     `- Catalog slices: ${SITE_ORIGIN}/api/catalog/index.json`,
     `- Catalog: ${SITE_ORIGIN}/api/catalog.json`,
@@ -1723,6 +1739,7 @@ export function renderLlmTxt(site: SiteData): string {
     "",
     "notes_for_agents:",
     "- These feeds are public, CORS-enabled, and do not require cookies, JS, or API keys.",
+    "- MCP at /mcp exposes search_apis, list_capabilities, and get_slice over Streamable HTTP. No auth.",
     "- Use /api/search.json?q= to recommend APIs. It returns the top 20 matches with name, docsUrl, description, and authType.",
     "- Prefer capability slices such as /api/catalog/geocoding.json instead of the full catalog.",
     "- Use /api/catalog.json only when you need the complete compact directory.",
@@ -1758,6 +1775,8 @@ export function renderLlmsTxt(site: SiteData): string {
     `- Collections: ${SITE_ORIGIN}/collections/`,
     "",
     "## Recommend APIs",
+    `- MCP: ${SITE_ORIGIN}/mcp`,
+    "- Tools: search_apis, list_capabilities, get_slice. Streamable HTTP. No auth.",
     `- Search: ${SITE_ORIGIN}/api/search.json?q=weather`,
     "- Returns the top 20 matches with name, docsUrl, description, and authType.",
     `- Slice index: ${SITE_ORIGIN}/api/catalog/index.json`,
@@ -1770,6 +1789,8 @@ export function renderLlmsTxt(site: SiteData): string {
     "",
     "## Machine-readable feeds",
     `- Manifest: ${SITE_ORIGIN}/api/index.json`,
+    `- MCP: ${SITE_ORIGIN}/mcp`,
+    `- MCP discovery: ${SITE_ORIGIN}/.well-known/mcp.json`,
     `- Catalog: ${SITE_ORIGIN}/api/catalog.json`,
     `- APIs: ${SITE_ORIGIN}/api/apis.json`,
     `- Topics: ${SITE_ORIGIN}/api/topics.json`,
@@ -1780,7 +1801,7 @@ export function renderLlmsTxt(site: SiteData): string {
     "",
     "## Notes for agents",
     "- These feeds are public, CORS-enabled, and do not require cookies, JS, or API keys.",
-    "- Prefer /api/search.json?q= or a capability/topic slice over the full catalog.",
+    "- Prefer MCP at /mcp, /api/search.json?q=, or a capability/topic slice over the full catalog.",
     "- /api/catalog.json is the compact full directory if a slice is not enough.",
     "- /api/apis.json is the full snapshot and is often too large for agent fetchers.",
     "- Use /search-index.json only for light search or ranking signals.",

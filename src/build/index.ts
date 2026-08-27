@@ -30,6 +30,7 @@ import {
   renderHomePage,
   renderLlmTxt,
   renderLlmsTxt,
+  renderMcpDiscovery,
   renderNotFoundPage,
   renderAgentCatalog,
   renderCatalogSlice,
@@ -147,6 +148,7 @@ async function buildSite(): Promise<void> {
   await copyOutputFile("src/assets/social-card.png", SOCIAL_CARD_PATH.slice(1));
   await writeOutputFile("llm.txt", renderLlmTxt(site));
   await writeOutputFile("llms.txt", renderLlmsTxt(site));
+  await writeOutputFile(".well-known/mcp.json", renderMcpDiscovery());
   await writeOutputFile("robots.txt", renderRobotsTxt());
   await writeOutputFile("search-index.json", renderSearchIndex(site));
   await writeOutputFile("api/index.json", renderApiManifest(site));

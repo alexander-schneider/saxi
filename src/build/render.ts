@@ -84,6 +84,7 @@ export function renderDocument(definition: PageDefinition): string {
     <meta name="theme-color" content="#08090a" />
     ${definition.noIndex ? '<meta name="robots" content="noindex, follow" />' : '<meta name="robots" content="index, follow" />'}
     <link rel="canonical" href="${canonicalUrl}" />
+    <link rel="alternate" type="text/markdown" title="Markdown" href="${canonicalUrl}" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="preload" href="/assets/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="/assets/fonts/ibm-plex-mono-latin-400.woff2" as="font" type="font/woff2" crossorigin />
@@ -1335,7 +1336,9 @@ export function renderApiManifest(site: SiteData): string {
     },
     endpoints: {
       manifest: absoluteUrl("/api/index.json"),
+      search: `${SITE_ORIGIN}/api/search.json?q=`,
       catalog: absoluteUrl("/api/catalog.json"),
+      catalogSlices: absoluteUrl("/api/catalog/index.json"),
       apis: absoluteUrl("/api/apis.json"),
       topics: absoluteUrl("/api/topics.json"),
       capabilities: absoluteUrl("/api/capabilities.json"),
@@ -1348,7 +1351,10 @@ export function renderApiManifest(site: SiteData): string {
       robots: absoluteUrl("/robots.txt")
     },
     notes: [
-      "Use /api/catalog.json for agent ingestion. It is compact, public, and CORS-enabled.",
+      "To recommend APIs, GET /api/search.json?q=weather — top 20 results with name, docsUrl, description, and authType.",
+      "Capability slices live at /api/catalog/{slug}.json, for example /api/catalog/geocoding.json and /api/catalog/search.json.",
+      "Topic slices live at /api/catalog/topic/{slug}.json. The slice index is /api/catalog/index.json.",
+      "Use /api/catalog.json only when you need the full compact directory.",
       "Use /api/apis.json only when you need the full snapshot with extra metadata.",
       "Use /search-index.json only for lightweight UI-style search and ranking.",
       "saxi.ai currently publishes full snapshots, not incremental diffs."
@@ -1420,16 +1426,29 @@ export function renderPublicApis(site: SiteData): string {
   });
 }
 
+export function compactRecommendationApi(api: ApiEntry): {
+  name: string;
+  docsUrl: string;
+  description: string;
+  authType: string;
+} {
+  return {
+    name: api.name,
+    docsUrl: api.docsUrl,
+    description: truncateText(api.description, 180),
+    authType: api.authType
+  };
+}
+
 export function renderAgentCatalog(site: SiteData): string {
   return JSON.stringify({
     schemaVersion: "1.0",
     generatedAt: site.generatedAt,
     total: site.apis.length,
+    search: `${SITE_ORIGIN}/api/search.json?q=`,
+    slices: `${SITE_ORIGIN}/api/catalog/index.json`,
     apis: site.apis.map((api) => ({
-      name: api.name,
-      docsUrl: api.docsUrl,
-      description: truncateText(api.description, 180),
-      authType: api.authType,
+      ...compactRecommendationApi(api),
       hasOpenApi: api.hasOpenApi,
       isOfficial: api.isOfficial,
       isFree: api.isFree,
@@ -1437,6 +1456,52 @@ export function renderAgentCatalog(site: SiteData): string {
       topics: api.sourceCategories.slice(0, 6).map((title) => slugify(title)),
       capabilities: api.capabilities.slice(0, 6).map((title) => slugify(title))
     }))
+  });
+}
+
+export function renderCatalogSliceIndex(site: SiteData): string {
+  return renderJson({
+    schemaVersion: "1.0",
+    generatedAt: site.generatedAt,
+    search: `${SITE_ORIGIN}/api/search.json?q=`,
+    catalog: absoluteUrl("/api/catalog.json"),
+    capabilities: site.capabilities.map((capability) => ({
+      slug: capability.slug,
+      title: capability.title,
+      count: capability.count,
+      html: absoluteUrl(`/capability/${capability.slug}/`),
+      json: absoluteUrl(`/api/catalog/${capability.slug}.json`)
+    })),
+    topics: site.topics.map((topic) => ({
+      slug: topic.slug,
+      title: topic.title,
+      count: topic.count,
+      html: absoluteUrl(`/topic/${topic.slug}/`),
+      json: absoluteUrl(`/api/catalog/topic/${topic.slug}.json`)
+    }))
+  });
+}
+
+export function renderCatalogSlice(
+  kind: "capability" | "topic",
+  item: TaxonomyPage,
+  generatedAt: string
+): string {
+  const htmlPath = kind === "capability" ? `/capability/${item.slug}/` : `/topic/${item.slug}/`;
+  const jsonPath =
+    kind === "capability" ? `/api/catalog/${item.slug}.json` : `/api/catalog/topic/${item.slug}.json`;
+
+  return JSON.stringify({
+    schemaVersion: "1.0",
+    generatedAt,
+    kind,
+    slug: item.slug,
+    title: item.title,
+    description: item.description,
+    html: absoluteUrl(htmlPath),
+    json: absoluteUrl(jsonPath),
+    total: item.apis.length,
+    apis: item.apis.map(compactRecommendationApi)
   });
 }
 
@@ -1530,7 +1595,9 @@ export function renderPublicUpdates(site: SiteData): string {
     },
     endpoints: {
       manifest: absoluteUrl("/api/index.json"),
+      search: `${SITE_ORIGIN}/api/search.json?q=`,
       catalog: absoluteUrl("/api/catalog.json"),
+      catalogSlices: absoluteUrl("/api/catalog/index.json"),
       apis: absoluteUrl("/api/apis.json"),
       topics: absoluteUrl("/api/topics.json"),
       capabilities: absoluteUrl("/api/capabilities.json"),
@@ -1544,7 +1611,7 @@ export function renderPublicUpdates(site: SiteData): string {
 }
 
 export function renderRobotsTxt(): string {
-  return `# Public machine feeds: /llms.txt and /api/catalog.json
+  return `# Public machine feeds: /llms.txt, /api/search.json, and /api/catalog/*.json
 # These endpoints are intentionally open to AI agents and require no auth.
 
 User-agent: *
@@ -1610,6 +1677,8 @@ export function renderLlmTxt(site: SiteData): string {
     `robots: ${SITE_ORIGIN}/robots.txt`,
     `manifest: ${SITE_ORIGIN}/api/index.json`,
     `catalog_feed: ${SITE_ORIGIN}/api/catalog.json`,
+    `catalog_slices: ${SITE_ORIGIN}/api/catalog/index.json`,
+    `search_feed: ${SITE_ORIGIN}/api/search.json?q=`,
     `api_feed: ${SITE_ORIGIN}/api/apis.json`,
     `topics_feed: ${SITE_ORIGIN}/api/topics.json`,
     `capabilities_feed: ${SITE_ORIGIN}/api/capabilities.json`,
@@ -1620,7 +1689,8 @@ export function renderLlmTxt(site: SiteData): string {
     "overview:",
     "- saxi.ai aggregates public API repositories and normalizes them into a crawlable directory.",
     "- V1 focuses on public APIs for AI agents and developers.",
-    "- Prefer canonical HTML pages for browsing and citation; use the JSON search index for machine-assisted filtering.",
+    "- Prefer canonical HTML pages for browsing and citation; send Accept: text/markdown for a chrome-free representation of the same URL.",
+    "- Use /api/search.json?q= and /api/catalog/{capability}.json for machine-assisted filtering.",
     "",
     "key_pages:",
     `- Home: ${SITE_ORIGIN}/`,
@@ -1642,6 +1712,8 @@ export function renderLlmTxt(site: SiteData): string {
     "",
     "machine_feeds:",
     `- Manifest: ${SITE_ORIGIN}/api/index.json`,
+    `- Search: ${SITE_ORIGIN}/api/search.json?q=weather`,
+    `- Catalog slices: ${SITE_ORIGIN}/api/catalog/index.json`,
     `- Catalog: ${SITE_ORIGIN}/api/catalog.json`,
     `- APIs: ${SITE_ORIGIN}/api/apis.json`,
     `- Topics: ${SITE_ORIGIN}/api/topics.json`,
@@ -1651,10 +1723,13 @@ export function renderLlmTxt(site: SiteData): string {
     "",
     "notes_for_agents:",
     "- These feeds are public, CORS-enabled, and do not require cookies, JS, or API keys.",
-    "- Use /api/catalog.json for ingestion. It is compact enough for LLM fetch tools.",
+    "- Use /api/search.json?q= to recommend APIs. It returns the top 20 matches with name, docsUrl, description, and authType.",
+    "- Prefer capability slices such as /api/catalog/geocoding.json instead of the full catalog.",
+    "- Use /api/catalog.json only when you need the complete compact directory.",
     "- Use /api/apis.json only when you need the full snapshot.",
     "- Use /search-index.json for lightweight search only; it is optimized for the website UI.",
-    "- Prefer docsUrl for execution and the static saxi.ai taxonomy pages for browsing and citation."
+    "- Prefer docsUrl for execution and the static saxi.ai taxonomy pages for browsing and citation.",
+    "- HTML pages support content negotiation: send Accept: text/markdown to receive a formatting-stripped markdown representation."
   ].join("\n");
 }
 
@@ -1662,19 +1737,36 @@ export function renderLlmsTxt(site: SiteData): string {
   const collections = site.collections
     .slice(0, 8)
     .map((collection) => `- ${collection.title}: ${SITE_ORIGIN}/collections/${collection.slug}/`);
+  const capabilitySlices = site.capabilities.map(
+    (capability) => `- ${capability.title}: ${SITE_ORIGIN}/api/catalog/${capability.slug}.json`
+  );
+  const topicSlices = site.topics.map(
+    (topic) => `- ${topic.title}: ${SITE_ORIGIN}/api/catalog/topic/${topic.slug}.json`
+  );
 
   return [
     `# ${SITE_NAME}`,
     "",
     "Public API directory for AI agents and developers.",
     "",
-    "## Canonical HTML pages",
+    "## Canonical pages",
     `- Home: ${SITE_ORIGIN}/`,
     `- All APIs: ${SITE_ORIGIN}/apis/`,
     `- Categories: ${SITE_ORIGIN}/topic/`,
     `- Sections: ${SITE_ORIGIN}/category/`,
     `- Capabilities: ${SITE_ORIGIN}/capability/`,
     `- Collections: ${SITE_ORIGIN}/collections/`,
+    "",
+    "## Recommend APIs",
+    `- Search: ${SITE_ORIGIN}/api/search.json?q=weather`,
+    "- Returns the top 20 matches with name, docsUrl, description, and authType.",
+    `- Slice index: ${SITE_ORIGIN}/api/catalog/index.json`,
+    "",
+    "## Capability slices",
+    ...capabilitySlices,
+    "",
+    "## Topic slices",
+    ...topicSlices,
     "",
     "## Machine-readable feeds",
     `- Manifest: ${SITE_ORIGIN}/api/index.json`,
@@ -1688,10 +1780,12 @@ export function renderLlmsTxt(site: SiteData): string {
     "",
     "## Notes for agents",
     "- These feeds are public, CORS-enabled, and do not require cookies, JS, or API keys.",
-    "- Fetch /api/catalog.json for ingestion. It is the compact catalog for LLM tools.",
+    "- Prefer /api/search.json?q= or a capability/topic slice over the full catalog.",
+    "- /api/catalog.json is the compact full directory if a slice is not enough.",
     "- /api/apis.json is the full snapshot and is often too large for agent fetchers.",
     "- Use /search-index.json only for light search or ranking signals.",
     "- Prefer docsUrl when selecting execution targets.",
+    "- HTML pages support `Accept: text/markdown` and return a chrome-free markdown representation of the same URL.",
     "",
     "## Featured collections",
     ...collections

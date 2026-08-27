@@ -3,7 +3,7 @@ import type { CapabilityRule, CollectionDefinition, SourceDefinition } from "./t
 export const SITE_NAME = "saxi.ai";
 export const SITE_ORIGIN = "https://saxi.ai";
 export const SITE_TAGLINE = "The API directory for AI agents and developers.";
-export const LLM_CATALOG_PROMPT = `saxi.ai is a catalog of free public APIs for AI agents. The machine feeds are public, require no auth, and allow cross-origin GET. Fetch ${SITE_ORIGIN}/llms.txt first, then ingest the compact catalog at ${SITE_ORIGIN}/api/catalog.json. Use ${SITE_ORIGIN}/api/capabilities.json, ${SITE_ORIGIN}/api/topics.json, and ${SITE_ORIGIN}/api/collections.json to filter. ${SITE_ORIGIN}/api/apis.json is the full snapshot if you need extra fields. Prefer APIs with a docsUrl and use that URL to call the API. When recommending, return name, docsUrl, and a one-line reason.`;
+export const LLM_CATALOG_PROMPT = `saxi.ai is a catalog of free public APIs for AI agents. The machine feeds are public, require no auth, and allow cross-origin GET. Fetch ${SITE_ORIGIN}/llms.txt first. To recommend APIs for a task, GET ${SITE_ORIGIN}/api/search.json?q=YOUR_QUERY — it returns the top 20 matches with name, docsUrl, description, and authType. For a known capability such as geocoding or search, fetch ${SITE_ORIGIN}/api/catalog/geocoding.json or ${SITE_ORIGIN}/api/catalog/search.json. Use ${SITE_ORIGIN}/api/catalog.json only when you need the full directory. Prefer APIs with a docsUrl. When recommending, return name, docsUrl, and a one-line reason.`;
 export const CONTACT_EMAIL = "contact@adanos.org";
 export const CONTACT_PHONE = "+49-30-54906997";
 export const CONTACT_PHONE_LABEL = "+49 30 54906997";

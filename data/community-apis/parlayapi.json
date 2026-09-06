@@ -1,0 +1,15 @@
+{
+  "name": "ParlayAPI",
+  "description": "Sports odds for personal and internal research, with game lines and player props.",
+  "docsUrl": "https://parlay-api.com/docs",
+  "websiteUrl": "https://parlay-api.com",
+  "categories": [
+    "Sports & Fitness"
+  ],
+  "auth": "API Key",
+  "cors": "Unknown",
+  "https": true,
+  "free": true,
+  "addedAt": "2026-09-05",
+  "notes": "Provides documented sports odds endpoints for personal/internal projects. The recurring free tier includes 1,000 credits per month; additional usage has paid plans. Authenticated data requires the user's own key. API data redistribution rights are not included."
+}

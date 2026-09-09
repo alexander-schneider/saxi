@@ -1,0 +1,16 @@
+{
+  "name": "Bucketlist.nl Dream of the Day",
+  "description": "Returns one daily travel or life-experience idea with an image, theme, destination, and canonical URL.",
+  "docsUrl": "https://bucketlist.nl/samenwerken?lang=en#droom-van-de-dag",
+  "websiteUrl": "https://bucketlist.nl/api/droom-van-de-dag?scope=wereld&lang=en",
+  "categories": [
+    "Entertainment"
+  ],
+  "auth": "No Auth",
+  "cors": "Yes",
+  "https": true,
+  "free": true,
+  "addedAt": "2026-09-09",
+  "openapiUrl": "https://bucketlist.nl/brand/droom-van-de-dag.openapi.json",
+  "notes": "Free, keyless, browser-callable JSON feed for widgets and newsletters. It supports five languages and publishes a stable daily experience object with public cache headers. The submitted URLs do not contain affiliate parameters."
+}
